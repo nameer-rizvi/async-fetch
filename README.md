@@ -7,7 +7,7 @@ All credit to [useHooks.com](https://usehooks.com/useAsync/).
 ## Installation
 
 ```
-$ npm i usefetch
+$ npm i fetcher-hook
 ```
 
 ### Usage
@@ -15,7 +15,7 @@ $ npm i usefetch
 Provide your fetch config or api string and handle the response params.
 
 ```javascript
-import useFetch from "usefetch";
+import useFetch from "fetcher-hook";
 
 const App = () => {
 	const { pending, data, error } = useFetch("http://fake.api.resource/");
