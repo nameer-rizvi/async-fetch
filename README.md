@@ -1,4 +1,4 @@
-# reactfetch
+# useFetch
 
 Asynchronously use fetch for requests within React components.
 
@@ -7,7 +7,7 @@ All credit to [useHooks.com](https://usehooks.com/useAsync/).
 ## Installation
 
 ```
-$ npm i reactfetch
+$ npm i usefetch
 ```
 
 ### Usage
@@ -15,10 +15,10 @@ $ npm i reactfetch
 Provide your fetch config or api string and handle the response params.
 
 ```javascript
-import reactfetch from "reactfetch";
+import useFetch from "usefetch";
 
 const App = () => {
-	const { pending, data, error } = reactfetch("http://fake.api.resource/");
+	const { pending, data, error } = useFetch("http://fake.api.resource/");
 	return pending
 		? "Loading..."
 		: data
