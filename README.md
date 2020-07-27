@@ -24,7 +24,7 @@ const App = () => {
 		: data
 		? "Data: " + JSON.stringify(data)
 		: error
-		? "Error: " + JSON.stringify(error)
+		? "Error: " + error
 		: null;
 };
 ```
