@@ -25,5 +25,5 @@ module.exports = (config, immediate = true) => {
     immediate && request();
   }, [request, immediate]);
 
-  return { pending, data, error, request };
+  return { pending, setPending, data, setData, error, setError, request };
 };
