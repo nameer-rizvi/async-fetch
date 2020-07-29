@@ -18,16 +18,16 @@ Provide your fetch config or api string and handle the response.
 import useFetch from "fetcher-hook";
 
 const App = () => {
-	const { pending, data, error, request } = useFetch(
-		"http://fake.api.resource/"
-	);
-	return pending ? (
-		"Loading..."
-	) : data ? (
-		"Data: " + JSON.stringify(data)
-	) : error ? (
-		<button onClick={request}>Error: {error}. Click here to try again.</button>
-	) : null;
+  const { pending, data, error, request } = useFetch(
+    "http://fake.api.resource/"
+  );
+  return pending ? (
+    "Loading..."
+  ) : data ? (
+    "Data: " + JSON.stringify(data)
+  ) : error ? (
+    <button onClick={request}>Error: {error}. Click here to try again.</button>
+  ) : null;
 };
 ```
 
