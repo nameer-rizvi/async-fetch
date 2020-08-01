@@ -2,8 +2,6 @@
 
 Asynchronously use fetch for requests within React components.
 
-All credit to [useHooks.com](https://usehooks.com/useAsync/).
-
 ## Installation
 
 ```
@@ -17,36 +15,51 @@ Provide your fetch config or api string and handle the response.
 ```javascript
 import useFetch from "fetcher-hook";
 
-const App = () => {
-  const { pending, data, error, request } = useFetch(
-    "http://fake.api.resource/"
-  );
-  return pending ? (
-    "Loading..."
-  ) : data ? (
-    "Data: " + JSON.stringify(data)
-  ) : error ? (
-    <button onClick={request}>Error: {error}. Click here to try again.</button>
-  ) : null;
-};
+const { pending, data, error, sendRequest, cancelRequest } = useFetch(
+  "http://fake.com/api/resource"
+);
+
+return pending ? (
+  <Fragment>
+    <p>Loading...</p>
+    <button onClick={cancelRequest}>Click here to cancel request.</button>
+  </Fragment>
+) : data ? (
+  "Data: " + JSON.stringify(data)
+) : error ? (
+  <button onClick={sendRequest}>
+    Error: {error.toString()}. Click here to try again.
+  </button>
+) : (
+  <button onClick={sendRequest}>Click here to send request.</button>
+);
 ```
 
-### Available Props And Definitions
+### Available IN Props And Definitions
+
+The hook only accepts one param, which can either be a string or an object. If it's a string, the param is assumed to be the url to fetch from and it's plugged-in directly to the fetch, otherwise, if it's an object, there's a few 'settings' props available to modify the request.
+
+- _requestCondition_: a conditional statement that must be satisfied in order to run the request.
+- _initialPendingState_: a boolean to define the initial pending state.
+- _initialDataState_: a value to define the initial data state.
+- _initialErrorState_: a value to define the initial error state.
+- _defer_: a boolean to define whether or not the request should run on mount or be deferred until manually called.
+- _persistData_: a boolean to define whether or not the data state should be persisted on each new request.
+- _persistError_: a boolean to define whether or not the error state should be persisted on each new request.
+- _delay_: number of milliseconds to wait between getting a response and handling it.
+- _onSuccess_: a function that'll run on a successful request, with the request data provided as a param.
+- _onFail_: a function that'll run on a failed request, with the request error provided as a param.
+- _onFinish_: a function that'll run once the request has completed (successfully or unsuccessfully).
+
+It is assumed that any other prop(s) that's provided is to be used for the actual fetch function.
+
+### Available OUT Props And Definitions
 
 - _pending_: whether the request is active or not.
 - _data_: the response data from the request.
 - _error_: the response error from the request.
-- _setPending_: custom setter for pending prop.
-- _setData_: custom setter for data prop.
-- _setError_: custom setter for error prop.
-- _request_: function to send requests.
-
-Along with the fetch config, the hook has a second param available to define whether or not it should run immediately.
-
-Ex.
-
-```javascript
-const { request: sendRequest } = useFetch({ ...fetchConfig }, false);
-
-return <button onClick={sendRequest}>Click here to fetch data.</button>;
-```
+- _setPending_: custom setter for pending state.
+- _setData_: custom setter for data state.
+- _setError_: custom setter for error state.
+- _sendRequest_: function to manually send request.
+- _cancelRequest_: function to manually cancel request.
