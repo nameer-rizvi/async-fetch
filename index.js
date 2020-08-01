@@ -23,7 +23,7 @@ module.exports = (props) => {
   const [error, setError] = useState(initialErrorState);
   const [sendRequest, setSendRequest] = useState(!defer);
 
-  const responseHandler = ({ signal, handler }) =>
+  const responseHandler = (signal, handler) =>
     signal && !signal.aborted && pending && handler();
 
   function request(url) {
