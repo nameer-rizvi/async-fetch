@@ -47,6 +47,7 @@ The hook only accepts one param, which can either be a string or an object. If i
 - _defer_: a boolean to define whether or not the request should run on mount or be deferred until manually called.
 - _persistData_: a boolean to define whether or not the data state should be persisted on each new request.
 - _persistError_: a boolean to define whether or not the error state should be persisted on each new request.
+- _onStart_: a function that'll run before the business logic for the request begins.
 - _onSuccess_: a function that'll run on a successful request, with the request data provided as a param.
 - _onFail_: a function that'll run on a failed request, with the request error provided as a param.
 - _onFinish_: a function that'll run once the request has completed (successfully or unsuccessfully).

@@ -10,6 +10,7 @@ module.exports = (props) => {
     defer,
     persistData,
     persistError,
+    onStart,
     onSuccess,
     onFail,
     onFinish,
@@ -25,10 +26,10 @@ module.exports = (props) => {
   const responseHandler = ({ signal, handler }) =>
     signal && !signal.aborted && pending && handler();
 
-  // eslint-disable-next-line
   function request(url) {
     const controller = new AbortController();
     const signal = controller.signal;
+    onStart && onStart();
     setPending(true);
     !persistData && setData(null);
     !persistError && setError(null);
@@ -59,6 +60,7 @@ module.exports = (props) => {
     const url = _url || (typeof props === "string" && props);
     const currentRequest =
       sendRequest && url && requestCondition !== false && request(url);
+    !currentRequest && setPending();
     return () => {
       currentRequest && currentRequest.cancel();
       setPending();
