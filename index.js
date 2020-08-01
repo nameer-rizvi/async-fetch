@@ -2,6 +2,7 @@ const { useState, useEffect } = require("react");
 
 module.exports = (props) => {
   const {
+    url: _url,
     requestCondition,
     initialPendingState,
     initialDataState,
@@ -9,7 +10,6 @@ module.exports = (props) => {
     defer,
     persistData,
     persistError,
-    delay,
     onSuccess,
     onFail,
     onFinish,
@@ -22,9 +22,10 @@ module.exports = (props) => {
   const [error, setError] = useState(initialErrorState);
   const [sendRequest, setSendRequest] = useState(!defer);
 
-  const delayedResponse = (signal, fn) =>
-    !signal.aborted && pending && (delay ? setTimeout(fn, delay) : fn());
+  const responseHandler = ({ signal, handler }) =>
+    signal && !signal.aborted && pending && handler();
 
+  // eslint-disable-next-line
   function request(url) {
     const controller = new AbortController();
     const signal = controller.signal;
@@ -34,19 +35,19 @@ module.exports = (props) => {
     fetch(url, { signal, ...config })
       .then((results) => results.json())
       .then((data) =>
-        delayedResponse(signal, () => {
+        responseHandler(signal, () => {
           setData(data);
           onSuccess && onSuccess(data);
         })
       )
       .catch((err) =>
-        delayedResponse(signal, () => {
+        responseHandler(signal, () => {
           setError(err);
           onFail && onFail(err);
         })
       )
       .finally(() =>
-        delayedResponse(signal, () => {
+        responseHandler(signal, () => {
           setPending();
           onFinish && onFinish();
         })
@@ -55,15 +56,13 @@ module.exports = (props) => {
   }
 
   useEffect(() => {
-    const url = typeof props === "string" ? props : props && props.url;
-    const newRequest =
-      requestCondition !== false && sendRequest && url && request(url);
-    const endRequest = () => {
-      newRequest && newRequest.cancel();
+    const url = _url || (typeof props === "string" && props);
+    const currentRequest =
+      sendRequest && url && requestCondition !== false && request(url);
+    return () => {
+      currentRequest && currentRequest.cancel();
       setPending();
     };
-    !sendRequest && endRequest();
-    return endRequest;
   }, [sendRequest]);
 
   return {
