@@ -40,16 +40,16 @@ return pending ? (
 
 The minimum requirement for the hook is an object with a url property `({url: ""})`.
 
-- _manual_: a boolean, where if true the request won't run unless called using the sendRequest OUT prop.
 - _useEffectDependency_: the dependency array for the useEffect (default: []).
+- _manual_: a boolean, where if true the request won't run unless called using the sendRequest OUT prop.
 - _condition_: a conditional statement where if false, the request wont' send.
+- _initialPending_: the initial boolean of the pending state.
+- _initialError_: the initial value of the error state.
+- _initialData_: the initial value of the data state.
 - _url_: the url string to fetch from.
 - _query_: query parameters (object) to include in the request.
 - _method_: the request method string (default: "GET").
 - _data_: data object to include in the request body.
-- _initialPending_: the initial boolean of the pending state.
-- _initialError_: the initial value of the error state.
-- _initialData_: the initial value of the data state.
 - _initialResponseMethod_: which method to use to return the response (default: json).
 - _onStart_: callback function to run before the request is sent.
 - _onSuccess_: callback function to run when the response has been handled using the _intialResponseMethod_. The response is available in the callback.
