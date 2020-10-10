@@ -40,6 +40,7 @@ return pending ? (
 
 The minimum requirement for the hook is an object with a url property `({url: ""})`.
 
+- _manual_: a boolean, where if true the request won't run unless called using the sendRequest OUT prop.
 - _useEffectDependency_: the dependency array for the useEffect (default: []).
 - _condition_: a conditional statement where if false, the request wont' send.
 - _url_: the url string to fetch from.

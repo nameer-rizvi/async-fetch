@@ -1,6 +1,7 @@
 const { useState, useEffect } = require("react");
 
 function useAsyncFetch({
+  manual,
   useEffectDependency = [],
   condition,
   url,
@@ -65,7 +66,12 @@ function useAsyncFetch({
 
   useEffect(() => {
     !url && console.warn("[async-fetch] url is required.");
-    !unmounted && url && !pending && condition !== false && sendRequest();
+    !unmounted &&
+      url &&
+      !manual &&
+      !pending &&
+      condition !== false &&
+      sendRequest();
   }, useEffectDependency);
 
   const cancelRequest = () => setUnmounted(true);
