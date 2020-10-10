@@ -1,29 +1,29 @@
-# useFetch
+# useAsyncFetch
 
 Asynchronously use fetch for requests within React components.
 
 ## Installation
 
 ```
-$ npm i fetcher-hook
+$ npm i async-fetch
 ```
 
 ### Usage
 
-Provide your fetch config or api string and handle the response.
+Provide your config and handle the response.
 
 ```javascript
 import { Fragment } from "react";
-import useFetch from "fetcher-hook";
+import useAsyncFetch from "async-fetch";
 
-const { pending, data, error, sendRequest, cancelRequest } = useFetch(
-  "http://fake.com/api/resource"
-);
+const { pending, data, error, sendRequest, cancelRequest } = useAsyncFetch({
+  url: "http://domain.com/api/resource",
+});
 
 return pending ? (
   <Fragment>
     <p>Loading...</p>
-    <button onClick={cancelRequest}>Click here to cancel request.</button>
+    <button onClick={cancelRequest}>Click here to cancel the request.</button>
   </Fragment>
 ) : data ? (
   "Data: " + JSON.stringify(data)
@@ -32,33 +32,36 @@ return pending ? (
     Error: {error.toString()}. Click here to try again.
   </button>
 ) : (
-  <button onClick={sendRequest}>Click here to send request.</button>
+  <button onClick={sendRequest}>Click here to send the request again.</button>
 );
 ```
 
 ### Available IN Props And Definitions
 
-The hook only accepts one param, which can either be a string or an object. If it's a string, the param is assumed to be the url to fetch from and it's plugged-in directly to the fetch, otherwise, if it's an object, there's a few 'settings' props available to modify the request.
+The minimum requirement for the hook is an object with a url property `({url: ""})`.
 
-- _requestCondition_: a conditional statement that must be satisfied in order to run the request.
-- _initialPendingState_: a boolean to define the initial pending state.
-- _initialDataState_: a value to define the initial data state.
-- _initialErrorState_: a value to define the initial error state.
-- _defer_: a boolean to define whether or not the request should run on mount or be deferred until manually called.
-- _persistData_: a boolean to define whether or not the data state should be persisted on each new request.
-- _persistError_: a boolean to define whether or not the error state should be persisted on each new request.
-- _onStart_: a function that'll run before the business logic for the request begins.
-- _onSuccess_: a function that'll run on a successful request, with the request data provided as a param.
-- _onFail_: a function that'll run on a failed request, with the request error provided as a param.
-- _onFinish_: a function that'll run once the request has completed (successfully or unsuccessfully).
+- _useEffectDependency_: the dependency array for the useEffect (default: []).
+- _condition_: a conditional statement where if false, the request wont' send.
+- _url_: the url string to fetch from.
+- _query_: query parameters (object) to include in the request.
+- _method_: the request method string (default: "GET").
+- _data_: data object to include in the request body.
+- _initialPending_: the initial boolean of the pending state.
+- _initialError_: the initial value of the error state.
+- _initialData_: the initial value of the data state.
+- _initialResponseMethod_: which method to use to return the response (default: json).
+- _onStart_: callback function to run before the request is sent.
+- _onSuccess_: callback function to run when the response has been handled using the _intialResponseMethod_. The response is available in the callback.
+- _onFail_: callback function to run when there was an error with the fetch. The error is available in the callback.
+- _onFinish_ callback function to run when the request has completed, regardless of success or failure.
 
-It is assumed that any other prop(s) that's provided is to be used for the actual fetch function.
+It is assumed that any other property that's provided is to be used for the actual fetch.
 
 ### Available OUT Props And Definitions
 
 - _pending_: whether the request is active or not.
-- _data_: the response data from the request.
-- _error_: the response error from the request.
+- _data_: the response data.
+- _error_: the response error.
 - _setPending_: custom setter for pending state.
 - _setData_: custom setter for data state.
 - _setError_: custom setter for error state.

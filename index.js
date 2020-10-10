@@ -1,80 +1,89 @@
 const { useState, useEffect } = require("react");
 
-module.exports = (props) => {
-  const {
-    url: _url,
-    requestCondition,
-    initialPendingState,
-    initialDataState,
-    initialErrorState,
-    defer,
-    persistData,
-    persistError,
-    onStart,
-    onSuccess,
-    onFail,
-    onFinish,
-    // Assumption that rest of the props are fetch config options:
-    ...config
-  } = (props && props.constructor === Object && props) || {};
+function useAsyncFetch({
+  useEffectDependency = [],
+  condition,
+  url,
+  query,
+  method = "GET",
+  data: body,
+  initialPending,
+  initialError,
+  initialData,
+  initialResponseMethod = "json",
+  onStart,
+  onSuccess,
+  onFail,
+  onFinish,
+  ...fetchConfig
+}) {
+  const [pending, setPending] = useState(initialPending);
+  const [error, setError] = useState(initialError);
+  const [data, setData] = useState(initialData);
+  const [unmounted, setUnmounted] = useState();
 
-  const [pending, setPending] = useState(initialPendingState || !defer);
-  const [data, setData] = useState(initialDataState);
-  const [error, setError] = useState(initialErrorState);
-  const [sendRequest, setSendRequest] = useState(!defer);
+  const handle = {
+    start: () => {
+      setPending(true);
+      setError();
+      onStart && onStart();
+    },
+    initialResponse: (initialResponse) => {
+      if (!initialResponse.ok) {
+        throw new Error(initialResponse.status);
+      }
+      return initialResponse[initialResponseMethod]();
+    },
+    success: (responseJSON) => {
+      setData(responseJSON);
+      onSuccess && onSuccess(responseJSON);
+    },
+    fail: (err) => {
+      setError(err);
+      onFail && onFail(err);
+    },
+    finish: () => {
+      setPending();
+      onFinish && onFinish();
+    },
+  };
 
-  const responseHandler = (signal, handler) =>
-    signal && !signal.aborted && pending && handler();
-
-  function request(url) {
-    const controller = new AbortController();
-    const signal = controller.signal;
-    onStart && onStart();
-    setPending(true);
-    !persistData && setData(null);
-    !persistError && setError(null);
-    fetch(url, { signal, ...config })
-      .then((results) => results.json())
-      .then((data) =>
-        responseHandler(signal, () => {
-          setData(data);
-          onSuccess && onSuccess(data);
-        })
-      )
-      .catch((err) =>
-        responseHandler(signal, () => {
-          setError(err);
-          onFail && onFail(err);
-        })
-      )
-      .finally(() =>
-        responseHandler(signal, () => {
-          setPending();
-          onFinish && onFinish();
-        })
-      );
-    return { cancel: () => controller.abort() };
+  function sendRequest() {
+    !unmounted && handle.start();
+    query = query ? "?" + new URLSearchParams(query) : "";
+    const options = {
+      method,
+      body: body && JSON.stringify(body),
+      ...fetchConfig,
+    };
+    fetch(url + query, options)
+      .then((r) => !unmounted && handle.initialResponse(r))
+      .then((r) => !unmounted && handle.success(r))
+      .catch((e) => !unmounted && handle.fail(e))
+      .finally(() => !unmounted && handle.finish());
   }
 
   useEffect(() => {
-    const url = _url || (typeof props === "string" && props);
-    const currentRequest =
-      sendRequest && url && requestCondition !== false && request(url);
-    !currentRequest && setPending();
-    return () => {
-      currentRequest && currentRequest.cancel();
-      setPending();
-    };
-  }, [sendRequest]);
+    !url && console.warn("[async-fetch] url is required.");
+    !unmounted && url && !pending && condition !== false && sendRequest();
+  }, useEffectDependency);
+
+  const cancelRequest = () => setUnmounted(true);
+
+  useEffect(() => {
+    () => cancelRequest();
+  }, []);
 
   return {
     pending,
-    data,
     error,
+    data,
     setPending,
-    setData,
     setError,
-    sendRequest: () => setSendRequest(true),
-    cancelRequest: () => setSendRequest(false),
+    setData,
+    sendRequest,
+    cancelRequest,
   };
-};
+}
+
+module.exports = useAsyncFetch;
