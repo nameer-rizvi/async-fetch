@@ -4,7 +4,7 @@ function useAsyncFetch({
   initialPending,
   initialError,
   initialData,
-  useEffectDependency,
+  useEffectDependency = [],
   manual,
   condition,
   url,
@@ -63,16 +63,6 @@ function useAsyncFetch({
       .catch((e) => !unmounted && handle.fail(e))
       .finally(() => !unmounted && handle.finish());
   }
-
-  const useEffectDependencyIsArray =
-    useEffectDependency && useEffectDependency.constructor === Array;
-
-  useEffectDependency = useEffectDependencyIsArray ? useEffectDependency : [];
-
-  !useEffectDependencyIsArray &&
-    console.warn(
-      "[async-fetch] useEffectDependency must be an array. Using empty array as a substitute."
-    );
 
   useEffect(() => {
     !url && console.warn("[async-fetch] url is required.");
