@@ -1,22 +1,22 @@
 const { useState, useEffect } = require("react");
 
 function useAsyncFetch({
-  manual,
-  useEffectDependency = [],
-  condition,
-  url,
-  query,
-  method = "GET",
-  data: body,
   initialPending,
   initialError,
   initialData,
-  initialResponseMethod = "json",
+  useEffectDependency,
+  manual,
+  condition,
+  url,
+  method = "GET",
+  query,
+  data: body,
   onStart,
   onSuccess,
   onFail,
   onFinish,
-  ...fetchConfig
+  initialResponseParser = "json",
+  ...fetchOptions
 }) {
   const [pending, setPending] = useState(initialPending);
   const [error, setError] = useState(initialError);
@@ -33,11 +33,11 @@ function useAsyncFetch({
       if (!initialResponse.ok) {
         throw new Error(initialResponse.status);
       }
-      return initialResponse[initialResponseMethod]();
+      return initialResponse[initialResponseParser]();
     },
-    success: (responseJSON) => {
-      setData(responseJSON);
-      onSuccess && onSuccess(responseJSON);
+    success: (parsedResponse) => {
+      setData(parsedResponse);
+      onSuccess && onSuccess(parsedResponse);
     },
     fail: (err) => {
       setError(err);
@@ -55,7 +55,7 @@ function useAsyncFetch({
     const options = {
       method,
       body: body && JSON.stringify(body),
-      ...fetchConfig,
+      ...fetchOptions,
     };
     fetch(url + query, options)
       .then((r) => !unmounted && handle.initialResponse(r))
@@ -63,6 +63,16 @@ function useAsyncFetch({
       .catch((e) => !unmounted && handle.fail(e))
       .finally(() => !unmounted && handle.finish());
   }
+
+  const useEffectDependencyIsArray =
+    useEffectDependency && useEffectDependency.constructor === Array;
+
+  useEffectDependency = useEffectDependencyIsArray ? useEffectDependency : [];
+
+  !useEffectDependencyIsArray &&
+    console.warn(
+      "[async-fetch] useEffectDependency must be an array. Using empty array as a substitute."
+    );
 
   useEffect(() => {
     !url && console.warn("[async-fetch] url is required.");

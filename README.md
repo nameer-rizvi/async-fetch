@@ -40,31 +40,31 @@ return pending ? (
 
 The minimum requirement for the hook is an object with a url property `({url: ""})`.
 
-- _useEffectDependency_: the dependency array for the useEffect (default: []).
-- _manual_: a boolean, where if true the request won't run unless called using the sendRequest OUT prop.
-- _condition_: a conditional statement where if false, the request wont' send.
-- _initialPending_: the initial boolean of the pending state.
-- _initialError_: the initial value of the error state.
-- _initialData_: the initial value of the data state.
-- _url_: the url string to fetch from.
+- _initialPending_: initial boolean of the pending state.
+- _initialError_: initial value of the error state.
+- _initialData_: initial value of the data state.
+- _useEffectDependency_: dependency array for the useEffect (default: []).
+- _manual_: boolean, where if true the request won't run unless called using the sendRequest OUT prop.
+- _condition_: conditional statement where if false, the request wont' send.
+- _url_: url string to fetch from.
+- _method_: request method string (default: "GET").
 - _query_: query parameters (object) to include in the request.
-- _method_: the request method string (default: "GET").
 - _data_: data object to include in the request body.
-- _initialResponseMethod_: which method to use to return the response (default: json).
 - _onStart_: callback function to run before the request is sent.
-- _onSuccess_: callback function to run when the response has been handled using the _intialResponseMethod_. The response is available in the callback.
-- _onFail_: callback function to run when there was an error with the fetch. The error is available in the callback.
-- _onFinish_ callback function to run when the request has completed, regardless of success or failure.
+- _onSuccess_: callback function to run after the response has been handled using the _initialResponseParser_. The response is available in the callback.
+- _onFail_: callback function to run when there is an error with the fetch. The error is available in the callback.
+- _onFinish_: callback function to run when after the request is completed, regardless of success or failure.
+- _initialResponseParser_: parser to use on the response (default: json).
 
 It is assumed that any other property that's provided is to be used for the actual fetch.
 
 ### Available OUT Props And Definitions
 
 - _pending_: whether the request is active or not.
-- _data_: the response data.
 - _error_: the response error.
+- _data_: the response data.
 - _setPending_: custom setter for pending state.
-- _setData_: custom setter for data state.
 - _setError_: custom setter for error state.
-- _sendRequest_: function to manually send request.
-- _cancelRequest_: function to manually cancel request.
+- _setData_: custom setter for data state.
+- _sendRequest_: function to send the request manually.
+- _cancelRequest_: function to cancel the request manually.
