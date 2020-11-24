@@ -8,7 +8,7 @@ Asynchronously use fetch for requests within React components.
 $ npm i async-fetch
 ```
 
-### Usage
+## Usage
 
 Provide your config and handle the response.
 
@@ -45,13 +45,13 @@ The minimum requirement for the hook is an object with a url property `({url: ""
 - _initialData_: initial value of the data state.
 - _useEffectDependency_: dependency array for the useEffect (default: []).
 - _manual_: boolean, where if true the request won't run unless called using the sendRequest OUT prop.
-- _condition_: conditional statement where if false, the request wont' send.
+- _condition_: conditional statement where if false, the request won't send.
 - _url_: url string to fetch from.
 - _method_: request method string (default: "GET").
 - _query_: query parameters (object) to include in the request.
 - _data_: data object to include in the request body.
 - _onStart_: callback function to run before the request is sent.
-- _onSuccess_: callback function to run after the response has been handled using the _initialResponseParser_. The response is available in the callback.
+- _onSuccess_: callback function to run after the response has been handled using the _initialResponseParser_. The parsed response is available in the callback.
 - _onFail_: callback function to run when there is an error with the fetch. The error is available in the callback.
 - _onFinish_: callback function to run when after the request is completed, regardless of success or failure.
 - _initialResponseParser_: parser to use on the response (default: json).

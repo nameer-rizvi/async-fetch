@@ -1,5 +1,7 @@
 const { useState, useEffect } = require("react");
 
+let controller;
+
 function useAsyncFetch({
   initialPending,
   initialError,
@@ -23,8 +25,12 @@ function useAsyncFetch({
   const [data, setData] = useState(initialData);
   const [unmounted, setUnmounted] = useState();
 
+  const cancelPreviousFetch = () =>
+    controller && controller.abort && controller.abort();
+
   const handle = {
     start: () => {
+      cancelPreviousFetch();
       setPending(true);
       setError();
       onStart && onStart();
@@ -52,16 +58,19 @@ function useAsyncFetch({
   function sendRequest() {
     !unmounted && handle.start();
     query = query ? "?" + new URLSearchParams(query) : "";
+    controller = new AbortController();
     const options = {
       method,
+      signal: controller && controller.signal,
       body: body && JSON.stringify(body),
       ...fetchOptions,
     };
-    fetch(url + query, options)
-      .then((r) => !unmounted && handle.initialResponse(r))
-      .then((r) => !unmounted && handle.success(r))
-      .catch((e) => !unmounted && handle.fail(e))
-      .finally(() => !unmounted && handle.finish());
+    !unmounted &&
+      fetch(url + query, options)
+        .then((r) => !unmounted && handle.initialResponse(r))
+        .then((r) => !unmounted && handle.success(r))
+        .catch((e) => !unmounted && handle.fail(e))
+        .finally(() => !unmounted && handle.finish());
   }
 
   useEffect(() => {
@@ -72,13 +81,16 @@ function useAsyncFetch({
       !pending &&
       condition !== false &&
       sendRequest();
+    // eslint-disable-next-line
   }, useEffectDependency);
 
-  const cancelRequest = () => setUnmounted(true);
+  const cancelRequest = () => {
+    cancelPreviousFetch();
+    setUnmounted(true);
+  };
 
-  useEffect(() => {
-    () => cancelRequest();
-  }, []);
+  // eslint-disable-next-line
+  useEffect(() => cancelRequest, []);
 
   return {
     pending,
@@ -87,9 +99,10 @@ function useAsyncFetch({
     setPending,
     setError,
     setData,
-    sendRequest,
     cancelRequest,
+    sendRequest: () => {
+      setUnmounted(false);
+      sendRequest();
+    },
   };
 }
-
-module.exports = useAsyncFetch;
