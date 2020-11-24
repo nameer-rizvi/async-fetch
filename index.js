@@ -25,12 +25,12 @@ function useAsyncFetch({
   const [data, setData] = useState(initialData);
   const [unmounted, setUnmounted] = useState();
 
-  const cancelPreviousFetch = () =>
+  const cancelActiveRequest = () =>
     controller && controller.abort && controller.abort();
 
   const handle = {
     start: () => {
-      cancelPreviousFetch();
+      cancelActiveRequest();
       setPending(true);
       setError();
       onStart && onStart();
@@ -85,7 +85,7 @@ function useAsyncFetch({
   }, useEffectDependency);
 
   const cancelRequest = () => {
-    cancelPreviousFetch();
+    cancelActiveRequest();
     setUnmounted(true);
   };
 
@@ -106,3 +106,5 @@ function useAsyncFetch({
     },
   };
 }
+
+module.exports = useAsyncFetch;
