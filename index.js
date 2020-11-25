@@ -1,23 +1,25 @@
 const { useState, useEffect } = require("react");
+const { useInterval } = require("use-interval");
 
 let controller;
 
-function useAsyncFetch(props) {
+function useAsyncFetch(props, fetchProps) {
   let {
     initialPending,
     initialError,
     initialData,
     useEffectDependency = [],
+    poll = null,
     manual,
     condition,
     method = "GET",
     query,
-    data: body,
+    data: bodyData,
+    initialResponseParser = "json",
     onStart,
     onSuccess,
     onFail,
     onFinish,
-    initialResponseParser = "json",
     ...fetchOptions
   } = props && props.constructor === Object ? props : {};
 
@@ -35,9 +37,9 @@ function useAsyncFetch(props) {
     controller && controller.abort && controller.abort();
 
   const handle = {
-    start: () => {
+    start: (props) => {
       cancelActiveRequest();
-      setPending(true);
+      (!props || (props && !props.excludePendingUpdate)) && setPending(true);
       setError();
       onStart && onStart();
     },
@@ -63,15 +65,18 @@ function useAsyncFetch(props) {
     },
   };
 
-  function sendRequest() {
-    !unmounted && handle.start();
+  function sendRequest(props) {
+    !unmounted && handle.start(props);
     query = query ? "?" + new URLSearchParams(query).toString() : "";
     controller = new AbortController();
     const options = {
       method,
       signal: controller && controller.signal,
-      body: body && JSON.stringify(body),
       ...fetchOptions,
+      body:
+        (bodyData || fetchOptions.body) &&
+        JSON.stringify({ ...bodyData, ...fetchOptions.body }),
+      ...fetchProps,
     };
     !unmounted &&
       fetch(url + query, options)
@@ -81,23 +86,25 @@ function useAsyncFetch(props) {
         .finally(() => !unmounted && handle.finish());
   }
 
+  const isValidRequest =
+    !unmounted && url && !manual && !pending && condition !== false;
+
   useEffect(() => {
     !url && console.warn("[async-fetch] url is required.");
-    !unmounted &&
-      url &&
-      !manual &&
-      !pending &&
-      condition !== false &&
-      sendRequest();
+    isValidRequest && sendRequest({});
     // eslint-disable-next-line
   }, useEffectDependency);
 
-  // eslint-disable-next-line
+  useInterval(() => {
+    isValidRequest && sendRequest({ excludePendingUpdate: true });
+  }, poll);
+
   useEffect(
     () => () => {
       setUnmounted(true);
       cancelActiveRequest();
     },
+    // eslint-disable-next-line
     []
   );
 
