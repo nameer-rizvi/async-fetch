@@ -2,24 +2,30 @@ const { useState, useEffect } = require("react");
 
 let controller;
 
-function useAsyncFetch({
-  initialPending,
-  initialError,
-  initialData,
-  useEffectDependency = [],
-  manual,
-  condition,
-  url,
-  method = "GET",
-  query,
-  data: body,
-  onStart,
-  onSuccess,
-  onFail,
-  onFinish,
-  initialResponseParser = "json",
-  ...fetchOptions
-}) {
+function useAsyncFetch(props) {
+  let {
+    initialPending,
+    initialError,
+    initialData,
+    useEffectDependency = [],
+    manual,
+    condition,
+    method = "GET",
+    query,
+    data: body,
+    onStart,
+    onSuccess,
+    onFail,
+    onFinish,
+    initialResponseParser = "json",
+    ...fetchOptions
+  } = props && props.constructor === Object ? props : {};
+
+  const url =
+    props &&
+    ((props.constructor === Object && props.url) ||
+      (props.constructor === String && props));
+
   const [pending, setPending] = useState(initialPending);
   const [error, setError] = useState(initialError);
   const [data, setData] = useState(initialData);
@@ -37,7 +43,9 @@ function useAsyncFetch({
     },
     initialResponse: (initialResponse) => {
       if (!initialResponse.ok) {
-        throw new Error(initialResponse.status);
+        throw Error(
+          initialResponse.statusText || initialResponse.status.toString()
+        );
       }
       return initialResponse[initialResponseParser]();
     },
@@ -57,7 +65,7 @@ function useAsyncFetch({
 
   function sendRequest() {
     !unmounted && handle.start();
-    query = query ? "?" + new URLSearchParams(query) : "";
+    query = query ? "?" + new URLSearchParams(query).toString() : "";
     controller = new AbortController();
     const options = {
       method,
@@ -84,13 +92,14 @@ function useAsyncFetch({
     // eslint-disable-next-line
   }, useEffectDependency);
 
-  const cancelRequest = () => {
-    cancelActiveRequest();
-    setUnmounted(true);
-  };
-
   // eslint-disable-next-line
-  useEffect(() => cancelRequest, []);
+  useEffect(
+    () => () => {
+      setUnmounted(true);
+      cancelActiveRequest();
+    },
+    []
+  );
 
   return {
     pending,
@@ -99,11 +108,8 @@ function useAsyncFetch({
     setPending,
     setError,
     setData,
-    cancelRequest,
-    sendRequest: () => {
-      setUnmounted(false);
-      sendRequest();
-    },
+    cancelRequest: cancelActiveRequest,
+    sendRequest,
   };
 }
 

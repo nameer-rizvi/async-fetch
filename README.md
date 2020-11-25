@@ -1,6 +1,6 @@
 # useAsyncFetch
 
-Asynchronously use fetch for requests within React components.
+Use fetch asynchronously for requests within React components.
 
 ## Installation
 
@@ -16,9 +16,9 @@ Provide your config and handle the response.
 import { Fragment } from "react";
 import useAsyncFetch from "async-fetch";
 
-const { pending, data, error, sendRequest, cancelRequest } = useAsyncFetch({
-  url: "http://domain.com/api/resource",
-});
+const { pending, data, error, sendRequest, cancelRequest } = useAsyncFetch(
+  "https://jsonplaceholder.typicode.com/todos/1"
+);
 
 return pending ? (
   <Fragment>
@@ -38,7 +38,7 @@ return pending ? (
 
 ### Available IN Props And Definitions
 
-The minimum requirement for the hook is an object with a url property `({url: ""})`.
+The minimum requirement for the hook is either a url string or an object with a url property.
 
 - _initialPending_: initial boolean of the pending state.
 - _initialError_: initial value of the error state.
