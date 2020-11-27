@@ -9,6 +9,7 @@ function useAsyncFetch(props, fetchProps) {
     initialError,
     initialData,
     useEffectDependency = [],
+    disableController,
     poll = null,
     manual,
     condition,
@@ -38,7 +39,7 @@ function useAsyncFetch(props, fetchProps) {
 
   const handle = {
     start: (props) => {
-      cancelActiveRequest();
+      disableController !== true && cancelActiveRequest();
       (!props || (props && !props.excludePendingUpdate)) && setPending(true);
       setError();
       onStart && onStart();
@@ -102,7 +103,7 @@ function useAsyncFetch(props, fetchProps) {
   useEffect(
     () => () => {
       setUnmounted(true);
-      cancelActiveRequest();
+      disableController !== true && cancelActiveRequest();
     },
     // eslint-disable-next-line
     []

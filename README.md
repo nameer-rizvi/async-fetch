@@ -46,6 +46,7 @@ The minimum requirement for the hook is either a url string or an object with a 
 | initialError          | Any      | Initial value of the error state.                                                                                                               |         |
 | initialData           | Any      | Initial value of the data state.                                                                                                                |         |
 | useEffectDependency   | Array    | Dependency array for the useEffect.                                                                                                             | []      |
+| disableController     | Boolean  | To allow fetch's AbortController API to cancel requests.                                                                                        |         |
 | poll                  | Number   | Time interval (in milliseconds) for polling.                                                                                                    |         |
 | manual                | Boolean  | Condition where if true the request won't send unless called using the sendRequest OUT property.                                                |         |
 | condition             | Boolean  | Conditional statement where if false, the request won't send.                                                                                   |         |
