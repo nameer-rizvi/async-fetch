@@ -37,41 +37,37 @@ function useAsyncFetch(props, fetchProps) {
   const cancelActiveRequest = () =>
     controller && controller.abort && controller.abort();
 
-  const handle = () =>
-    !unmounted
-      ? {
-          start: (props) => {
-            disableController !== true && cancelActiveRequest();
-            (!props || (props && !props.excludePendingUpdate)) &&
-              setPending(true);
-            setError();
-            onStart && onStart();
-          },
-          initialResponse: (initialResponse) => {
-            if (!initialResponse.ok) {
-              throw Error(
-                initialResponse.statusText || initialResponse.status.toString()
-              );
-            }
-            return initialResponse[initialResponseParser]();
-          },
-          success: (parsedResponse) => {
-            setData(parsedResponse);
-            onSuccess && onSuccess(parsedResponse);
-          },
-          fail: (err) => {
-            setError(err);
-            onFail && onFail(err);
-          },
-          finish: () => {
-            setPending();
-            onFinish && onFinish();
-          },
-        }
-      : {};
+  const handle = {
+    start: (props) => {
+      disableController !== true && cancelActiveRequest();
+      (!props || (props && !props.excludePendingUpdate)) && setPending(true);
+      setError();
+      onStart && onStart();
+    },
+    initialResponse: (initialResponse) => {
+      if (!initialResponse.ok) {
+        throw Error(
+          initialResponse.statusText || initialResponse.status.toString()
+        );
+      }
+      return initialResponse[initialResponseParser]();
+    },
+    success: (parsedResponse) => {
+      setData(parsedResponse);
+      onSuccess && onSuccess(parsedResponse);
+    },
+    fail: (err) => {
+      setError(err);
+      onFail && onFail(err);
+    },
+    finish: () => {
+      setPending();
+      onFinish && onFinish();
+    },
+  };
 
   function sendRequest(props) {
-    handle().start(props);
+    !unmounted && handle.start(props);
     query = query ? "?" + new URLSearchParams(query).toString() : "";
     controller = new AbortController();
     const options = {
@@ -85,10 +81,10 @@ function useAsyncFetch(props, fetchProps) {
     };
     !unmounted &&
       fetch(url + query, options)
-        .then(handle().initialResponse)
-        .then(handle().success)
-        .catch(handle().fail)
-        .finally(handle().finish);
+        .then((r) => !unmounted && handle.initialResponse(r))
+        .then((r) => !unmounted && handle.success(r))
+        .catch((e) => !unmounted && handle.fail(e))
+        .finally(() => !unmounted && handle.finish());
   }
 
   const isValidRequest = url && !manual && !pending && condition !== false;
