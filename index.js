@@ -66,7 +66,7 @@ function useAsyncFetch(props, fetchProps) {
     },
   };
 
-  function sendRequest(props) {
+  function sendRequest(props = {}) {
     !unmounted && handle.start(props);
     query = query ? "?" + new URLSearchParams(query).toString() : "";
     controller = new AbortController();
@@ -87,11 +87,12 @@ function useAsyncFetch(props, fetchProps) {
         .finally(() => !unmounted && handle.finish());
   }
 
-  const isValidRequest = url && !manual && !pending && condition !== false;
+  // Removed !pending condition for allowing retries on stalled requests.
+  const isValidRequest = url && !manual && condition !== false;
 
   useEffect(() => {
     !url && console.warn("[async-fetch] url is required.");
-    isValidRequest && sendRequest({});
+    isValidRequest && sendRequest();
     // eslint-disable-next-line
   }, useEffectDependency);
 
