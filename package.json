@@ -1,6 +1,6 @@
 {
   "name": "async-fetch",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Asynchronously use fetch for requests within React components.",
   "main": "index.js",
   "scripts": {
@@ -23,7 +23,9 @@
   },
   "homepage": "https://github.com/nameer-rizvi/useAsyncFetch#readme",
   "devDependencies": {
-    "react": "^17.0.1",
+    "react": "^17.0.1"
+  },
+  "dependencies": {
     "use-interval": "^1.3.0"
   }
 }
