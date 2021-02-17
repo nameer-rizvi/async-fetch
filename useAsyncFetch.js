@@ -1,5 +1,5 @@
 const { useState, useEffect } = require("react");
-const { useInterval } = require("use-interval");
+const useInterval = require("./useInterval");
 
 let controller;
 
@@ -38,9 +38,9 @@ function useAsyncFetch(props, fetchProps) {
     controller && controller.abort && controller.abort();
 
   const handle = {
-    start: (props) => {
+    start: (props = {}) => {
       disableController !== true && cancelActiveRequest();
-      (!props || (props && !props.excludePendingUpdate)) && setPending(true);
+      !props.excludePendingUpdate && setPending(true);
       setError();
       onStart && onStart();
     },
@@ -96,9 +96,10 @@ function useAsyncFetch(props, fetchProps) {
     // eslint-disable-next-line
   }, useEffectDependency);
 
-  useInterval(() => {
-    isValidRequest && sendRequest({ excludePendingUpdate: true });
-  }, poll);
+  useInterval(
+    () => isValidRequest && sendRequest({ excludePendingUpdate: true }),
+    poll
+  );
 
   useEffect(
     () => () => {
