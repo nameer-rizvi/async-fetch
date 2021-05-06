@@ -13,7 +13,7 @@ $ npm i async-fetch
 Provide your config and handle the response.
 
 ```javascript
-import { Fragment } from "react";
+import React from "react";
 import useAsyncFetch from "async-fetch";
 
 const { pending, data, error, sendRequest, cancelRequest } = useAsyncFetch(
@@ -21,18 +21,20 @@ const { pending, data, error, sendRequest, cancelRequest } = useAsyncFetch(
 );
 
 return pending ? (
-  <Fragment>
-    <p>Loading...</p>
-    <button onClick={cancelRequest}>Click here to cancel the request.</button>
-  </Fragment>
+  "Loading..."
 ) : data ? (
   "Data: " + JSON.stringify(data)
 ) : error ? (
-  <button onClick={sendRequest}>
-    Error: {error.toString()}. Click here to try again.
-  </button>
+  "Error: " + error.toString()
 ) : (
-  <button onClick={sendRequest}>Click here to send the request again.</button>
+  <React.Fragment>
+    <br />
+    <br />
+    <button onClick={sendRequest}>Send request.</button>
+    <br />
+    <br />
+    <button onClick={cancelRequest}>Cancel request.</button>
+  </React.Fragment>
 );
 ```
 

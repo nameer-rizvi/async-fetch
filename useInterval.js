@@ -12,7 +12,7 @@ function useInterval(callback, poll) {
   });
 
   useEffect(() => {
-    if (poll === null || poll === false) return undefined;
+    if (poll === null || poll === false) return;
     const tick = () => savedCallback.current();
     const id = setInterval(tick, poll);
     return () => clearInterval(id);
