@@ -1,128 +1,110 @@
-const { useState, useEffect } = require("react");
-const useInterval = require("./useInterval");
+import { useState, useEffect } from "react";
+import useInterval from "./useInterval";
 
 let controller;
 
-function useAsyncFetch(props, fetchProps) {
+function useAsyncFetch(props, fetchProps = {}) {
   let {
-    initialPending,
-    initialError,
-    initialData,
-    useEffectDependency = [],
-    disableController,
-    poll = null,
-    manual,
-    condition,
-    method = "GET",
+    url,
     query,
-    data: bodyData,
-    initialResponseParser = "json",
+    params,
+    data: requestData,
+    responseParser = "json",
     onStart,
     onSuccess,
     onFail,
     onFinish,
-    ...fetchOptions
+    ignoreEffect,
+    useEffect: useEffectDependency = [],
+    poll,
+    ...fetchProps2
   } = props && props.constructor === Object ? props : {};
 
-  const url =
-    props &&
-    ((props.constructor === Object && props.url) ||
-      (props.constructor === String && props));
+  if (props && props.constructor === String) url = props;
 
-  const [pending, setPending] = useState(initialPending);
-  const [error, setError] = useState(initialError);
-  const [data, setData] = useState(initialData);
+  const [pending1, setPending1] = useState();
+  const [pending2, setPending2] = useState();
+  const [error, setError] = useState();
+  const [data, setData] = useState();
   const [unmounted, setUnmounted] = useState();
 
   function cancelActiveRequest() {
     if (controller && controller.abort) controller.abort();
   }
 
-  function sendRequest(props = {}) {
-    if (url && condition !== false && !unmounted) {
-      if (disableController !== true) cancelActiveRequest();
-
-      if (!props.excludePendingUpdate) setPending(true);
-
-      setError();
-
-      if (onStart) onStart();
-
-      query = query ? "?" + new URLSearchParams(query).toString() : "";
+  async function sendRequest() {
+    try {
+      cancelActiveRequest();
 
       controller = new AbortController();
 
       const options = {
-        method,
         signal: controller && controller.signal,
-        ...fetchOptions,
-        body:
-          (bodyData || fetchOptions.body) &&
-          JSON.stringify({ ...bodyData, ...fetchOptions.body }),
         ...fetchProps,
+        ...fetchProps2,
       };
 
-      fetch(url + query, options)
-        .then((initialResponse) => {
-          if (!unmounted) {
-            if (!initialResponse.ok) {
-              const throwError =
-                initialResponse.statusText || initialResponse.status.toString();
-              throw Error(throwError);
-            }
-            return initialResponse[initialResponseParser]();
-          }
-        })
-        .then((parsedResponse) => {
-          if (!unmounted) {
-            setData(parsedResponse);
-            if (onSuccess) onSuccess(parsedResponse);
-          }
-        })
-        .catch((responseError) => {
-          if (!unmounted) {
-            setError(responseError);
-            if (onFail) onFail(responseError);
-          }
-        })
-        .finally(() => {
-          if (!unmounted) {
-            setPending();
-            if (onFinish) onFinish();
-          }
-        });
+      if (query || params)
+        url += "?" + new URLSearchParams(query || params).toString();
+
+      if (requestData) options.body = JSON.stringify(requestData);
+
+      if (!unmounted) {
+        if (pending1) {
+          setPending2(true);
+        } else setPending1(true);
+        setError();
+        if (onStart) onStart();
+      }
+
+      const response = await fetch(url, options);
+
+      if (!response.ok)
+        throw new Error(response.statusText || response.status.toString());
+
+      const parsedResponse = await response[responseParser]();
+
+      if (!unmounted) {
+        setData(parsedResponse);
+        if (onSuccess) onSuccess(parsedResponse);
+      }
+    } catch (error) {
+      if (!unmounted && error.name !== "AbortError") {
+        setError(error);
+        if (onFail) onFail(error);
+      }
+    } finally {
+      if (!unmounted) {
+        if (pending1) {
+          setPending2(false);
+        } else setPending1(false);
+        if (onFinish) onFinish();
+      }
     }
   }
 
   useEffect(() => {
-    if (!url) console.warn("[async-fetch] url is required.");
-    if (!manual) sendRequest();
-    // eslint-disable-next-line
-  }, useEffectDependency);
+    if (ignoreEffect !== true) sendRequest();
+  }, useEffectDependency); // eslint-disable-line
 
   useInterval(() => {
-    sendRequest({ excludePendingUpdate: true });
+    sendRequest();
   }, poll);
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    return () => {
       setUnmounted(true);
-      if (disableController !== true) cancelActiveRequest();
-    },
-    // eslint-disable-next-line
-    []
-  );
+      cancelActiveRequest();
+    };
+  }, []);
 
   return {
-    pending,
+    pending: pending1 || pending2,
     error,
     data,
-    setPending,
-    setError,
-    setData,
-    cancelRequest: cancelActiveRequest,
     sendRequest,
+    cancelRequest: cancelActiveRequest,
   };
 }
 
-module.exports = useAsyncFetch;
+export default useAsyncFetch;

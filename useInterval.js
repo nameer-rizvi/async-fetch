@@ -1,6 +1,4 @@
-// https://github.com/Hermanya/use-interval/blob/master/src/index.tsx
-
-const { useEffect, useRef } = require("react");
+import { useEffect, useRef } from "react";
 
 const noop = () => {};
 
@@ -12,11 +10,13 @@ function useInterval(callback, poll) {
   });
 
   useEffect(() => {
-    if (poll === null || poll === false) return;
+    if (!poll) return;
     const tick = () => savedCallback.current();
     const id = setInterval(tick, poll);
     return () => clearInterval(id);
   }, [poll]);
 }
 
-module.exports = useInterval;
+export default useInterval;
+
+// https://github.com/Hermanya/use-interval/blob/master/src/index.tsx
