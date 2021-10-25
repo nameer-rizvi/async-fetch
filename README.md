@@ -56,7 +56,7 @@ The minimum requirement for the hook is either a url string or an object with a 
 | ignoreEffect   | Boolean  | Condition where if true the request won't send unless called using the sendRequest OUT property.               |         |
 | poll           | Number   | Time interval (in milliseconds) for polling.                                                                   |         |
 
-* It is assumed that any other property that's provided is to be used for the actual fetch. *
+It is assumed that any other property that's provided is to be used for the actual fetch.
 
 ### Available OUT Props And Definitions
 
