@@ -15,39 +15,30 @@ function useAsyncFetch(props, fetchProps = {}) {
     onFail,
     onFinish,
     ignoreEffect,
-    useEffect: useEffectDependency = [],
+    useEffect: useEffectDependencies = [],
     poll,
     ...fetchProps2
-  } = props && props.constructor === Object ? props : {};
+  } = props instanceof Object ? props : {};
 
-  if (props && props.constructor === String) url = props;
+  if (typeof props === "string") url = props;
 
   const [pending1, setPending1] = useState();
+
   const [pending2, setPending2] = useState();
+
   const [error, setError] = useState();
+
   const [data, setData] = useState();
+
   const [unmounted, setUnmounted] = useState();
 
-  function cancelActiveRequest() {
-    if (controller && controller.abort) controller.abort();
-  }
+  const cancelActiveRequest = () => controller?.abort?.();
 
   async function sendRequest() {
     try {
       cancelActiveRequest();
 
       controller = new AbortController();
-
-      const options = {
-        signal: controller && controller.signal,
-        ...fetchProps,
-        ...fetchProps2,
-      };
-
-      if (query || params)
-        url += "?" + new URLSearchParams(query || params).toString();
-
-      if (requestData) options.body = JSON.stringify(requestData);
 
       if (!unmounted) {
         if (pending1) {
@@ -57,7 +48,15 @@ function useAsyncFetch(props, fetchProps = {}) {
         if (onStart) onStart();
       }
 
-      const response = await fetch(url, options);
+      if (query || params)
+        url += "?" + new URLSearchParams(query || params).toString();
+
+      const response = await fetch(url, {
+        signal: controller?.signal,
+        body: requestData && JSON.stringify(requestData),
+        ...fetchProps,
+        ...fetchProps2,
+      });
 
       if (!response.ok)
         throw new Error(response.statusText || response.status.toString());
@@ -82,10 +81,9 @@ function useAsyncFetch(props, fetchProps = {}) {
       }
     }
   }
-
   useEffect(() => {
     if (ignoreEffect !== true) sendRequest();
-  }, useEffectDependency); // eslint-disable-line
+  }, useEffectDependencies); // eslint-disable-line
 
   useInterval(() => {
     sendRequest();

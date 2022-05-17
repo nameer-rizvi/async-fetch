@@ -1,9 +1,7 @@
 import { useEffect, useRef } from "react";
 
-const noop = () => {};
-
 function useInterval(callback, poll) {
-  const savedCallback = useRef(noop);
+  const savedCallback = useRef(() => {});
 
   useEffect(() => {
     savedCallback.current = callback;
@@ -13,7 +11,9 @@ function useInterval(callback, poll) {
     if (!poll) return;
     const tick = () => savedCallback.current();
     const id = setInterval(tick, poll);
-    return () => clearInterval(id);
+    return () => {
+      clearInterval(id);
+    };
   }, [poll]);
 }
 

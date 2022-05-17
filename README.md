@@ -10,7 +10,7 @@ $ npm i async-fetch
 
 ## Usage
 
-Provide your config and handle the response.
+Provide your request config and handle the response.
 
 ```javascript
 import React from "react";
@@ -43,7 +43,7 @@ return pending ? (
 The minimum requirement for the hook is either a url string or an object with a url property.
 
 | Key            | Type     | Definition                                                                                                     | Default |
-|----------------|----------|----------------------------------------------------------------------------------------------------------------|---------|
+| -------------- | -------- | -------------------------------------------------------------------------------------------------------------- | ------- |
 | url            | String   | URL to send request to.                                                                                        |         |
 | query          | Object   | Query parameters to include in the request (alt key name: "params").                                           |         |
 | data           | Object   | Data object to include in the request body.                                                                    |         |
@@ -51,7 +51,7 @@ The minimum requirement for the hook is either a url string or an object with a 
 | onStart        | Function | Callback function to run before the request is sent.                                                           |         |
 | onSuccess      | Function | Callback function to run after the response has been parsed. The parsed response is available in the callback. |         |
 | onFail         | Function | Callback function to run when the request responds with an error. The error is available in the callback.      |         |
-| onFinish       | Function | Callback function to run when after the request has completed, regardless of success or failure.               |         |
+| onFinish       | Function | Callback function to run after the request has completed, regardless of success or failure.                    |         |
 | useEffect      | Array    | Dependency array for the useEffect.                                                                            | []      |
 | ignoreEffect   | Boolean  | Condition where if true the request won't send unless called using the sendRequest OUT property.               |         |
 | poll           | Number   | Time interval (in milliseconds) for polling.                                                                   |         |
