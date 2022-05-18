@@ -3,21 +3,21 @@ import useInterval from "./useInterval";
 
 let controller;
 
-function useAsyncFetch(props, fetchProps = {}) {
+function useAsyncFetch(props, props2) {
   let {
     url,
     query,
     params,
     data: requestData,
-    responseParser = "json",
+    parser = "json",
     onStart,
     onSuccess,
     onFail,
     onFinish,
-    ignoreEffect,
-    useEffect: useEffectDependencies = [],
+    ignore,
+    deps = [],
     poll,
-    ...fetchProps2
+    ...props3
   } = props instanceof Object ? props : {};
 
   if (typeof props === "string") url = props;
@@ -54,14 +54,16 @@ function useAsyncFetch(props, fetchProps = {}) {
       const response = await fetch(url, {
         signal: controller?.signal,
         body: requestData && JSON.stringify(requestData),
-        ...fetchProps,
-        ...fetchProps2,
+        ...props2,
+        ...props3,
       });
 
       if (!response.ok)
-        throw new Error(response.statusText || response.status.toString());
+        throw new Error(
+          JSON.stringify({ code: r.status, text: r.statusText, message: text })
+        );
 
-      const parsedResponse = await response[responseParser]();
+      const parsedResponse = await response[parser]();
 
       if (!unmounted) {
         setData(parsedResponse);
@@ -69,8 +71,17 @@ function useAsyncFetch(props, fetchProps = {}) {
       }
     } catch (error) {
       if (!unmounted && error.name !== "AbortError") {
-        setError(error);
-        if (onFail) onFail(error);
+        let errorJson;
+        try {
+          errorJson = JSON.parse(
+            error
+              .toString()
+              .replace("Error:", "")
+              .trim()
+          );
+        } catch {}
+        setError(errorJson || error);
+        if (onFail) onFail(errorJson || error);
       }
     } finally {
       if (!unmounted) {
@@ -81,9 +92,10 @@ function useAsyncFetch(props, fetchProps = {}) {
       }
     }
   }
+
   useEffect(() => {
-    if (ignoreEffect !== true) sendRequest();
-  }, useEffectDependencies); // eslint-disable-line
+    if (ignore !== true) sendRequest();
+  }, deps); // eslint-disable-line
 
   useInterval(() => {
     sendRequest();

@@ -1,7 +1,7 @@
 {
   "name": "async-fetch",
-  "version": "0.1.8",
-  "description": "Asynchronously use fetch for requests within React components.",
+  "version": "0.1.9",
+  "description": "Use fetch asynchronously for requests within React components.",
   "main": "useAsyncFetch.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
