@@ -36,7 +36,7 @@ const App = () => {
         : data
         ? JSON.stringify(data)
         : error
-        ? "Error: " + error.toString()
+        ? JSON.stringify(error)
         : ""}
     </React.Fragment>
   );
