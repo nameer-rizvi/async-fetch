@@ -61,8 +61,8 @@ function useAsyncFetch(props, props2) {
       if (!response.ok)
         throw new Error(
           JSON.stringify({
-            code: r.status,
-            text: r.statusText,
+            code: response.status,
+            text: response.statusText,
             response: await response.text(),
           })
         );
