@@ -63,7 +63,7 @@ function useAsyncFetch(props, props2) {
           JSON.stringify({
             code: r.status,
             text: r.statusText,
-            message: await response.text(),
+            response: await response.text(),
           })
         );
 
