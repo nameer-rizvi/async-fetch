@@ -60,7 +60,11 @@ function useAsyncFetch(props, props2) {
 
       if (!response.ok)
         throw new Error(
-          JSON.stringify({ code: r.status, text: r.statusText, message: text })
+          JSON.stringify({
+            code: r.status,
+            text: r.statusText,
+            message: await response.text(),
+          })
         );
 
       const parsedResponse = await response[parser]();
@@ -73,12 +77,8 @@ function useAsyncFetch(props, props2) {
       if (!unmounted && error.name !== "AbortError") {
         let errorJson;
         try {
-          errorJson = JSON.parse(
-            error
-              .toString()
-              .replace("Error:", "")
-              .trim()
-          );
+          errorJson = error.toString().replace("Error:", "");
+          errorJson = JSON.parse(errorJson.trim());
         } catch {}
         setError(errorJson || error);
         if (onFail) onFail(errorJson || error);
