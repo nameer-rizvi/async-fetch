@@ -14,8 +14,8 @@ function useAsyncFetch(props, props2) {
     onSuccess,
     onFail,
     onFinish,
-    ignore,
     deps = [],
+    ignore,
     poll,
     ...props3
   } = props instanceof Object ? props : {};
