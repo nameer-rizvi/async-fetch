@@ -17,6 +17,7 @@ function useAsyncFetch(props, props2) {
     deps = [],
     ignore,
     poll,
+    ignoreCleanup,
     ...props3
   } = props instanceof Object ? props : {};
 
@@ -102,10 +103,12 @@ function useAsyncFetch(props, props2) {
   }, poll);
 
   useEffect(() => {
-    return () => {
-      setUnmounted(true);
-      cancelActiveRequest();
-    };
+    if (!ignoreCleanup) {
+      return () => {
+        setUnmounted(true);
+        cancelActiveRequest();
+      };
+    }
   }, []);
 
   return {
