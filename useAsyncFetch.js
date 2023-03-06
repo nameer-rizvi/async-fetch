@@ -122,8 +122,8 @@ function useAsyncFetch(url, props = {}) {
       }
     } finally {
       clearTimeout(requestTimeout);
-      setCancelSource();
       if (!unmounted) {
+        setCancelSource();
         if (setPending) setPending();
         if (onFinish) onFinish();
       }
