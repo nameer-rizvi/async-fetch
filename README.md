@@ -77,3 +77,7 @@ The minimum requirement for the hook is a url string as the first argument. The 
 | data          | Any      | The response data.                       |
 | sendRequest   | Function | Function to send the request manually.   |
 | cancelRequest | Function | Function to cancel the request manually. |
+
+### Next.js
+
+For the hook to work properly in a Next.js project you must turn `reactStrictMode` to false in your `next.config.js`.

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import useInterval from "./useInterval";
+import useInterval from "./useInterval.js";
 
 function useAsyncFetch(url, props = {}) {
   const {
