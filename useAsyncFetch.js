@@ -1,78 +1,115 @@
 import { useState, useEffect } from "react";
 import useInterval from "./useInterval";
 
-let controller;
-
-function useAsyncFetch(props, props2) {
-  let {
-    url,
+function useAsyncFetch(url, props = {}) {
+  const {
+    initialPending,
+    initialData,
+    initialError,
+    deps = [],
+    poll,
+    ignoreCleanup,
+    ignoreRequest,
+    timeout = 30000,
     query,
     params,
-    data: requestData,
+    data: data2,
     parser = "json",
     onStart,
     onSuccess,
     onFail,
     onFinish,
-    deps = [],
-    ignore,
-    poll,
-    ignoreCleanup,
-    ...props3
-  } = props instanceof Object ? props : {};
+    ...fetchProps
+  } = props;
 
-  if (typeof props === "string") url = props;
+  const [pending, setPending] = useState(initialPending);
 
-  const [pending1, setPending1] = useState();
+  const [data, setData] = useState(initialData);
 
-  const [pending2, setPending2] = useState();
+  const [error, setError] = useState(initialError);
 
-  const [error, setError] = useState();
+  const [cancelSource, setCancelSource] = useState();
 
-  const [data, setData] = useState();
+  const [unmounted, setUnmounted] = useState(false);
 
-  const [unmounted, setUnmounted] = useState();
+  useEffect(() => {
+    return cleanupRequest;
+  }, []);
 
-  const cancelActiveRequest = () => controller?.abort?.();
+  useEffect(() => {
+    sendRequest();
+  }, [url, query, params, data2, ...deps]);
+
+  useInterval(() => {
+    sendRequest();
+  }, poll);
+
+  function cancelRequest(SOURCE) {
+    if (cancelSource?.abort) cancelSource.abort();
+  }
+
+  function cleanupRequest() {
+    if (ignoreCleanup !== true) {
+      setUnmounted(true);
+      cancelRequest();
+    }
+  }
 
   async function sendRequest() {
+    if (!url) throw new Error("URL is required.");
+
+    if (typeof url !== "string") throw new Error("URL must be of type string.");
+
+    const controller = new AbortController();
+
+    fetchProps.signal = controller.signal;
+
+    const requestTimeout = setTimeout(() => {
+      controller.abort();
+    }, timeout);
+
     try {
-      cancelActiveRequest();
+      if (ignoreRequest !== true) {
+        const contentType =
+          fetchProps.headers?.["Content-Type"] ||
+          fetchProps.headers?.["content-type"];
 
-      controller = new AbortController();
+        if (contentType === "application/x-www-form-urlencoded") {
+          fetchProps.body = new URLSearchParams(data2 || {}).toString();
+        } else if (data2) {
+          fetchProps.body = JSON.stringify(data2);
+        }
 
-      if (!unmounted) {
-        if (pending1) {
-          setPending2(true);
-        } else setPending1(true);
-        setError();
-        if (onStart) onStart();
-      }
+        if (query || params) {
+          url += "?" + new URLSearchParams(query || params).toString();
+        }
 
-      if (query || params)
-        url += "?" + new URLSearchParams(query || params).toString();
+        if (!unmounted) {
+          if (onStart) onStart();
+          if (setPending) setPending(true);
+          if (setError) setError();
+          cancelRequest();
+          setCancelSource(controller);
+        }
 
-      const response = await fetch(url, {
-        signal: controller?.signal,
-        body: requestData && JSON.stringify(requestData),
-        ...props2,
-        ...props3,
-      });
+        const response = await fetch(url, fetchProps);
 
-      if (!response.ok)
-        throw new Error(
-          JSON.stringify({
-            code: response.status,
-            text: response.statusText,
-            response: await response.text(),
-          })
-        );
+        if (!response.ok)
+          throw new Error(
+            JSON.stringify({
+              code: response.status,
+              text: response.statusText,
+              response: await response.text(),
+            })
+          );
 
-      const parsedResponse = await response[parser]();
+        const parsedResponse = await response[parser]();
 
-      if (!unmounted) {
-        setData(parsedResponse);
-        if (onSuccess) onSuccess(parsedResponse);
+        if (!unmounted) {
+          setCancelSource();
+          setData(parsedResponse);
+          if (onSuccess) onSuccess(parsedResponse);
+        }
       }
     } catch (error) {
       if (!unmounted && error.name !== "AbortError") {
@@ -85,39 +122,15 @@ function useAsyncFetch(props, props2) {
         if (onFail) onFail(errorJson || error);
       }
     } finally {
+      clearTimeout(requestTimeout);
       if (!unmounted) {
-        if (pending1) {
-          setPending2(false);
-        } else setPending1(false);
+        if (setPending) setPending();
         if (onFinish) onFinish();
       }
     }
   }
 
-  useEffect(() => {
-    if (ignore !== true) sendRequest();
-  }, deps); // eslint-disable-line
-
-  useInterval(() => {
-    sendRequest();
-  }, poll);
-
-  useEffect(() => {
-    if (!ignoreCleanup) {
-      return () => {
-        setUnmounted(true);
-        cancelActiveRequest();
-      };
-    }
-  }, []);
-
-  return {
-    pending: pending1 || pending2,
-    error,
-    data,
-    sendRequest,
-    cancelRequest: cancelActiveRequest,
-  };
+  return { pending, data, error, sendRequest, cancelRequest };
 }
 
 export default useAsyncFetch;

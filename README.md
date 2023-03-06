@@ -10,15 +10,15 @@ $ npm i async-fetch
 
 ## Usage
 
-Provide your request config and handle the response.
+Provide a url and handle the request.
 
 ```javascript
 import React from "react";
 import useAsyncFetch from "async-fetch";
 
-const App = () => {
+function App() {
   const { pending, data, error, sendRequest, cancelRequest } = useAsyncFetch(
-    "http://localhost:5000/api/v1/"
+    "https://jsonplaceholder.typicode.com/todos/1"
   );
 
   return (
@@ -40,34 +40,39 @@ const App = () => {
         : ""}
     </React.Fragment>
   );
-};
+}
 
 export default App;
 ```
 
 ### Available IN Props And Definitions
 
-The minimum requirement for the hook is either a url string or an object with a url property. It is assumed that any other property that's provided is to be used for the actual fetch.
+The minimum requirement for the hook is a url string as the first argument. The second argument has the following available options, while anything else that is provided is passed to the fetch request:
 
-| Key       | Type     | Definition                                                                                                     | Default |
-| --------- | -------- | -------------------------------------------------------------------------------------------------------------- | ------- |
-| url       | String   | URL to send request to.                                                                                        |         |
-| query     | Object   | Query parameters to include in the request (alt key name: "params").                                           |         |
-| data      | Object   | Data object to include in the request body.                                                                    |         |
-| parser    | String   | Method used to parse the response.                                                                             | "json"  |
-| onStart   | Function | Callback function to run before the request is sent.                                                           |         |
-| onSuccess | Function | Callback function to run after the response has been parsed. The parsed response is available in the callback. |         |
-| onFail    | Function | Callback function to run when the request responds with an error. The error is available in the callback.      |         |
-| onFinish  | Function | Callback function to run after the request has completed, regardless of success or failure.                    |         |
-| deps      | Array    | Dependency array for the useEffect.                                                                            | []      |
-| ignore    | Boolean  | Condition where if true the request won't send unless called using the sendRequest OUT property.               |         |
-| poll      | Number   | Time interval (in milliseconds) for polling.                                                                   |         |
+| Key            | Type     | Definition                                                                                                      | Default |
+| -------------- | -------- | --------------------------------------------------------------------------------------------------------------- | ------- |
+| initialPending | Boolean  | Initial state for the pending constant.                                                                         |         |
+| initialData    | Any      | Initial state for the data constant.                                                                            |         |
+| initialError   | Any      | Initial state for the error constant.                                                                           |         |
+| deps           | Array    | List of dependencies to run the request on.                                                                     |         |
+| poll           | Number   | Number of milliseconds to wait for polling requests.                                                            |         |
+| ignoreCleanup  | Boolean  | Whether or not the hook should cleanup on component unmount.                                                    |         |
+| ignoreRequest  | Boolean  | Whether or not the request should send.                                                                         |         |
+| timeout        | Number   | Number of milliseconds to wait before canceling the request.                                                    | 30000   |
+| query          | Object   | JSON object to append to the url as query params.                                                               |         |
+| params         | Object   | JSON object to append to the url as query params.                                                               |         |
+| data           | Object   | JSON object to send in the request body.                                                                        |         |
+| parser         | String   | Method used to parse the response.                                                                              | "json"  |
+| onStart        | Function | Callback function to call when the request starts.                                                              |         |
+| onSuccess      | Function | Callback function to call when the response has been received. The response is available as the first argument. |         |
+| onFail         | Function | Callback function to call when the request has failed. The error is available as the first argument.            |         |
+| onFinish       | Function | Callback function to call when the request has finished.                                                        |         |
 
 ### Available OUT Props And Definitions
 
 | Key           | Type     | Definition                               |
 | ------------- | -------- | ---------------------------------------- |
-| pending       | Boolean  | Whether the request is active or not.    |
+| pending       | Boolean  | Whether or not the request is active.    |
 | error         | Any      | The response error.                      |
 | data          | Any      | The response data.                       |
 | sendRequest   | Function | Function to send the request manually.   |
