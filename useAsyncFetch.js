@@ -106,7 +106,6 @@ function useAsyncFetch(url, props = {}) {
         const parsedResponse = await response[parser]();
 
         if (!unmounted) {
-          setCancelSource();
           setData(parsedResponse);
           if (onSuccess) onSuccess(parsedResponse);
         }
@@ -123,6 +122,7 @@ function useAsyncFetch(url, props = {}) {
       }
     } finally {
       clearTimeout(requestTimeout);
+      setCancelSource();
       if (!unmounted) {
         if (setPending) setPending();
         if (onFinish) onFinish();
