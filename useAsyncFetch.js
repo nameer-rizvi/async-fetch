@@ -11,9 +11,9 @@ function useAsyncFetch(url, props = {}) {
     ignoreCleanup,
     ignoreRequest,
     timeout = 30000,
+    data: data2,
     query,
     params,
-    data: data2,
     parser = "json",
     onStart,
     onSuccess,
@@ -23,6 +23,8 @@ function useAsyncFetch(url, props = {}) {
   } = props;
 
   const [pending, setPending] = useState(initialPending);
+
+  const [pending2, setPending2] = useState();
 
   const [data, setData] = useState(initialData);
 
@@ -44,7 +46,7 @@ function useAsyncFetch(url, props = {}) {
     sendRequest();
   }, poll);
 
-  function cancelRequest(SOURCE) {
+  function cancelRequest() {
     if (cancelSource?.abort) cancelSource.abort();
   }
 
@@ -60,16 +62,16 @@ function useAsyncFetch(url, props = {}) {
 
     if (typeof url !== "string") throw new Error("URL must be of type string.");
 
-    const controller = new AbortController();
+    if (ignoreRequest !== true) {
+      const controller = new AbortController();
 
-    fetchProps.signal = controller.signal;
+      fetchProps.signal = controller.signal;
 
-    const requestTimeout = setTimeout(() => {
-      controller.abort();
-    }, timeout);
+      const requestTimeout = setTimeout(() => {
+        controller.abort();
+      }, timeout);
 
-    try {
-      if (ignoreRequest !== true) {
+      try {
         const contentType =
           fetchProps.headers?.["Content-Type"] ||
           fetchProps.headers?.["content-type"];
@@ -86,8 +88,10 @@ function useAsyncFetch(url, props = {}) {
 
         if (!unmounted) {
           if (onStart) onStart();
-          if (setPending) setPending(true);
-          if (setError) setError();
+          if (pending) {
+            setPending2(true);
+          } else setPending(true);
+          setError();
           cancelRequest();
           setCancelSource(controller);
         }
@@ -106,31 +110,40 @@ function useAsyncFetch(url, props = {}) {
         const parsedResponse = await response[parser]();
 
         if (!unmounted) {
-          setData(parsedResponse);
           if (onSuccess) onSuccess(parsedResponse);
+          setData(parsedResponse);
         }
-      }
-    } catch (error) {
-      if (!unmounted && error.name !== "AbortError") {
-        let errorJson;
-        try {
-          errorJson = error.toString().replace("Error:", "");
-          errorJson = JSON.parse(errorJson.trim());
-        } catch {}
-        setError(errorJson || error);
-        if (onFail) onFail(errorJson || error);
-      }
-    } finally {
-      clearTimeout(requestTimeout);
-      if (!unmounted) {
-        setCancelSource();
-        if (setPending) setPending();
-        if (onFinish) onFinish();
+      } catch (e) {
+        if (!unmounted && e.name !== "AbortError") {
+          let error;
+          try {
+            error = e.toString().replace("Error:", "");
+            error = JSON.parse(error.trim());
+          } catch {
+            error = { response: e.toString(), text: e.toString() };
+          }
+          if (onFail) onFail(error);
+          setError(error);
+        }
+      } finally {
+        clearTimeout(requestTimeout);
+        if (!unmounted) {
+          if (onFinish) onFinish();
+          if (pending) {
+            setPending2();
+          } else setPending();
+        }
       }
     }
   }
 
-  return { pending, data, error, sendRequest, cancelRequest };
+  return {
+    pending: pending || pending2,
+    data,
+    error,
+    sendRequest,
+    cancelRequest,
+  };
 }
 
 export default useAsyncFetch;
