@@ -10,7 +10,7 @@ function useAsyncFetch(path, props = {}) {
     deps = [],
     poll,
     cachetime = 60000, // 1 minute.
-    timeout = 30000, // 5 minutes.
+    timeout = 30000, // 30 seconds.
     ignoreCleanup,
     ignoreRequest,
     query,
