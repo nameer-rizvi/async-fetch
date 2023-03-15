@@ -43,7 +43,7 @@ function useAsyncFetch(path, props = {}) {
   }, []);
 
   useEffect(() => {
-    sendRequest();
+    sendRequest("USE_CACHE");
   }, [path, ...deps]);
 
   useInterval(() => {
@@ -61,7 +61,7 @@ function useAsyncFetch(path, props = {}) {
     }
   }
 
-  async function sendRequest() {
+  async function sendRequest(constant) {
     if (!path) throw new Error("URL is required.");
 
     if (typeof path !== "string")
@@ -106,7 +106,8 @@ function useAsyncFetch(path, props = {}) {
 
         const url = path + q;
 
-        const cachedResponse = cache.get(url, fetchProps);
+        const cachedResponse =
+          constant === "USE_CACHE" && cache.get(url, fetchProps);
 
         let parsedResponse = cachedResponse;
 
