@@ -1,19 +1,21 @@
 import { useState, useEffect } from "react";
+import useCache from "./useCache.js";
 import useInterval from "./useInterval.js";
 
-function useAsyncFetch(url, props = {}) {
+function useAsyncFetch(path, props = {}) {
   const {
     initialPending,
     initialData,
     initialError,
     deps = [],
     poll,
+    cachetime = 60000, // 1 minute.
+    timeout = 30000, // 5 minutes.
     ignoreCleanup,
     ignoreRequest,
-    timeout = 30000,
-    data: data2,
     query,
     params,
+    data: data2,
     parser = "json",
     onStart,
     onSuccess,
@@ -34,13 +36,15 @@ function useAsyncFetch(url, props = {}) {
 
   const [unmounted, setUnmounted] = useState(false);
 
+  const cache = useCache(cachetime);
+
   useEffect(() => {
     return cleanupRequest;
   }, []);
 
   useEffect(() => {
     sendRequest();
-  }, [url, query, params, data2, ...deps]);
+  }, [path, ...deps]);
 
   useInterval(() => {
     sendRequest();
@@ -58,9 +62,10 @@ function useAsyncFetch(url, props = {}) {
   }
 
   async function sendRequest() {
-    if (!url) throw new Error("URL is required.");
+    if (!path) throw new Error("URL is required.");
 
-    if (typeof url !== "string") throw new Error("URL must be of type string.");
+    if (typeof path !== "string")
+      throw new Error("URL must be of type string.");
 
     if (ignoreRequest !== true) {
       const controller = new AbortController();
@@ -72,6 +77,13 @@ function useAsyncFetch(url, props = {}) {
       }, timeout);
 
       try {
+        let q = "";
+
+        if (query || params) {
+          if (!path.endsWith("?")) q += "?";
+          q += new URLSearchParams(query || params).toString();
+        }
+
         const contentType =
           fetchProps.headers?.["Content-Type"] ||
           fetchProps.headers?.["content-type"];
@@ -82,36 +94,41 @@ function useAsyncFetch(url, props = {}) {
           fetchProps.body = JSON.stringify(data2);
         }
 
-        if (query || params) {
-          url += "?" + new URLSearchParams(query || params).toString();
-        }
-
         if (!unmounted) {
-          if (onStart) onStart();
           if (pending) {
             setPending2(true);
           } else setPending(true);
           setError();
           cancelRequest();
           setCancelSource(controller);
+          if (onStart) onStart();
         }
 
-        const response = await fetch(url, fetchProps);
+        const url = path + q;
 
-        if (!response.ok)
-          throw new Error(
-            JSON.stringify({
-              code: response.status,
-              text: response.statusText,
-              response: await response.text(),
-            })
-          );
+        const cachedResponse = cache.get(url, fetchProps);
 
-        const parsedResponse = await response[parser]();
+        let parsedResponse = cachedResponse;
+
+        if (!parsedResponse) {
+          const response = await fetch(url, fetchProps);
+
+          if (!response.ok)
+            throw new Error(
+              JSON.stringify({
+                code: response.status,
+                text: response.statusText,
+                response: await response.text(),
+              })
+            );
+
+          parsedResponse = await response[parser]();
+        }
 
         if (!unmounted) {
-          if (onSuccess) onSuccess(parsedResponse);
           setData(parsedResponse);
+          if (onSuccess) onSuccess(parsedResponse);
+          if (!cachedResponse) cache.set(url, fetchProps, parsedResponse);
         }
       } catch (e) {
         if (!unmounted && e.name !== "AbortError") {
@@ -122,16 +139,16 @@ function useAsyncFetch(url, props = {}) {
           } catch {
             error = { response: e.toString(), text: e.toString() };
           }
-          if (onFail) onFail(error);
           setError(error);
+          if (onFail) onFail(error);
         }
       } finally {
         clearTimeout(requestTimeout);
         if (!unmounted) {
-          if (onFinish) onFinish();
           if (pending) {
             setPending2();
           } else setPending();
+          if (onFinish) onFinish();
         }
       }
     }

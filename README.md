@@ -56,9 +56,10 @@ The minimum requirement for the hook is a url string as the first argument. The 
 | initialError   | Any      | Initial state for the error constant.                                                                           |         |
 | deps           | Array    | List of dependencies to run the request on.                                                                     |         |
 | poll           | Number   | Number of milliseconds to wait for polling requests.                                                            |         |
+| cachetime      | Number   | Number of milliseconds to cache responses for.                                                                  | 60000   |
+| timeout        | Number   | Number of milliseconds to wait before canceling the request.                                                    | 30000   |
 | ignoreCleanup  | Boolean  | Whether or not the hook should cleanup on component unmount.                                                    |         |
 | ignoreRequest  | Boolean  | Whether or not the request should send.                                                                         |         |
-| timeout        | Number   | Number of milliseconds to wait before canceling the request.                                                    | 30000   |
 | query          | Object   | JSON object to append to the url as query params.                                                               |         |
 | params         | Object   | JSON object to append to the url as query params.                                                               |         |
 | data           | Object   | JSON object to send in the request body.                                                                        |         |
@@ -77,7 +78,3 @@ The minimum requirement for the hook is a url string as the first argument. The 
 | data          | Any      | The response data.                       |
 | sendRequest   | Function | Function to send the request manually.   |
 | cancelRequest | Function | Function to cancel the request manually. |
-
-### Next.js
-
-For the hook to work properly in a Next.js project you must turn `reactStrictMode` to false in your `next.config.js`.
