@@ -8,9 +8,8 @@ function useInterval(callback, poll) {
   });
 
   useEffect(() => {
-    if (!poll) return;
-    const onTick = () => callbackRef.current();
-    const interval = setInterval(onTick, poll);
+    if (typeof poll !== "number") return;
+    const interval = setInterval(() => callbackRef.current(), poll);
     return () => {
       clearInterval(interval);
     };

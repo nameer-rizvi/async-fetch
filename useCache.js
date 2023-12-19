@@ -4,27 +4,17 @@ const cache = {};
 
 function useCache(cachetime) {
   useInterval(() => {
-    for (let [key, value] of Object.entries(cache))
+    for (let [key, value] of Object.entries(cache)) {
       if (value.timestamp + cachetime < new Date().getTime()) delete cache[key];
+    }
   }, cachetime);
 
-  function makeKey(url, fetchProps) {
-    return typeof fetchProps.body === "string" ? url + fetchProps.body : url;
+  function get(url) {
+    if (cachetime) return cache[url]?.response;
   }
 
-  function get(url, fetchProps) {
-    if (cachetime) {
-      const key = makeKey(url, fetchProps);
-      return cache[key]?.response;
-    }
-  }
-
-  function set(url, fetchProps, response) {
-    if (cachetime) {
-      const key = makeKey(url, fetchProps);
-      const payload = { timestamp: new Date().getTime(), response };
-      cache[key] = payload;
-    }
+  function set(url, response) {
+    if (cachetime) cache[url] = { timestamp: new Date().getTime(), response };
   }
 
   return { get, set };

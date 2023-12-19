@@ -1,6 +1,6 @@
 # useAsyncFetch
 
-Use fetch asynchronously for requests within React components.
+Use fetch for requests within React components.
 
 ## Installation
 
@@ -18,7 +18,7 @@ import useAsyncFetch from "async-fetch";
 
 function App() {
   const { pending, data, error, sendRequest, cancelRequest } = useAsyncFetch(
-    "https://jsonplaceholder.typicode.com/todos/1"
+    "https://jsonplaceholder.typicode.com/todos/1",
   );
 
   return (

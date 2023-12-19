@@ -1,7 +1,7 @@
 {
   "name": "async-fetch",
-  "version": "0.2.8",
-  "description": "Use fetch asynchronously for requests within React components.",
+  "version": "0.2.9",
+  "description": "Use fetch for requests within React components.",
   "main": "useAsyncFetch.js",
   "type": "module",
   "scripts": {
