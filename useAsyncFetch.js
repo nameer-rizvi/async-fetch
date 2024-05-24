@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import useCache from "./useCache.js";
 import useInterval from "./useInterval.js";
 
-function useAsyncFetch(requestURL, props = {}) {
+function useAsyncFetch(urlstring, props = {}) {
   const {
     initialPending,
     initialData,
@@ -44,7 +44,7 @@ function useAsyncFetch(requestURL, props = {}) {
 
   useEffect(() => {
     sendRequest("USE_CACHE");
-  }, [path, ...deps]);
+  }, [urlstring, ...deps]);
 
   useInterval(() => {
     sendRequest();
@@ -62,15 +62,15 @@ function useAsyncFetch(requestURL, props = {}) {
   }
 
   async function sendRequest(constant) {
-    if (!requestURL) {
+    if (!urlstring) {
       throw new Error("URL is required.");
     }
 
-    if (typeof requestURL !== "string") {
+    if (typeof urlstring !== "string") {
       throw new Error("URL must be of type string.");
     }
 
-    const url = new URL(requestURL);
+    const url = new URL(urlstring);
 
     if (ignoreRequest !== true) {
       const controller = new AbortController();
