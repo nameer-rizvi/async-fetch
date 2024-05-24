@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import useCache from "./useCache.js";
 import useInterval from "./useInterval.js";
 
-function useAsyncFetch(path, props = {}) {
+function useAsyncFetch(requestURL, props = {}) {
   const {
     initialPending,
     initialData,
@@ -62,13 +62,15 @@ function useAsyncFetch(path, props = {}) {
   }
 
   async function sendRequest(constant) {
-    if (!path) {
+    if (!requestURL) {
       throw new Error("URL is required.");
     }
 
-    if (typeof path !== "string") {
+    if (typeof requestURL !== "string") {
       throw new Error("URL must be of type string.");
     }
+
+    const url = new URL(requestURL);
 
     if (ignoreRequest !== true) {
       const controller = new AbortController();
@@ -80,12 +82,7 @@ function useAsyncFetch(path, props = {}) {
       }, timeout);
 
       try {
-        let q = "";
-
-        if (query || params) {
-          if (!path.endsWith("?")) q += "?";
-          q += new URLSearchParams(query || params);
-        }
+        if (query || params) url.search = new URLSearchParams(query || params);
 
         const contentType =
           fetchProps.headers?.["Content-Type"] ||
@@ -98,18 +95,15 @@ function useAsyncFetch(path, props = {}) {
         }
 
         if (!unmounted) {
-          if (pending) {
-            setPending2(true);
-          } else setPending(true);
+          if (pending) setPending2(true);
+          if (!pending) setPending(true);
           setError();
           cancelRequest();
           setCancelSource(controller);
           if (onStart) onStart();
         }
 
-        const url = path + q;
-
-        const cachedResponse = constant === "USE_CACHE" && cache.get(url);
+        const cachedResponse = constant === "USE_CACHE" && cache.get(url.href);
 
         let parsedResponse = cachedResponse;
 
