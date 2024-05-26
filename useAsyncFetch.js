@@ -38,9 +38,13 @@ function useAsyncFetch(stringUrl, props = {}) {
     return cleanupRequest;
   }, []);
 
-  useEffect(sendRequest, [stringUrl, ...deps]);
+  useEffect(() => {
+    sendRequest();
+  }, [stringUrl, ...deps]);
 
-  useInterval(sendRequest, poll);
+  useInterval(() => {
+    sendRequest();
+  }, poll);
 
   function cancelRequest() {
     if (cancelSource?.abort) cancelSource.abort();
