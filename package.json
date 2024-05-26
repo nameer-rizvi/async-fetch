@@ -1,7 +1,7 @@
 {
   "name": "async-fetch",
-  "version": "0.3.2",
-  "description": "Use fetch for requests within React components.",
+  "version": "0.3.3",
+  "description": "Use async fetch hook for requests within React components.",
   "main": "useAsyncFetch.js",
   "type": "module",
   "scripts": {},
@@ -17,6 +17,8 @@
   ],
   "author": "Nameer Rizvi (https://github.com/nameer-rizvi)",
   "license": "ISC",
-  "bugs": "https://github.com/nameer-rizvi/useAsyncFetch/issues",
+  "bugs": {
+    "url": "https://github.com/nameer-rizvi/useAsyncFetch/issues"
+  },
   "homepage": "https://github.com/nameer-rizvi/useAsyncFetch#readme"
 }

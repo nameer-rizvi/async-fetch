@@ -1,6 +1,6 @@
 # useAsyncFetch
 
-Use fetch for requests within React components.
+Use async fetch hook for requests within React components.
 
 ## Installation
 
@@ -56,12 +56,11 @@ The minimum requirement for the hook is a url string as the first argument. The 
 | initialError   | Any      | Initial state for the error constant.                                                                           |         |
 | deps           | Array    | List of dependencies to run the request on.                                                                     |         |
 | poll           | Number   | Number of milliseconds to wait for polling requests.                                                            |         |
-| cachetime      | Number   | Number of milliseconds to cache responses for.                                                                  | 60000   |
 | timeout        | Number   | Number of milliseconds to wait before canceling the request.                                                    | 30000   |
 | ignoreCleanup  | Boolean  | Whether or not the hook should cleanup on component unmount.                                                    |         |
 | ignoreRequest  | Boolean  | Whether or not the request should send.                                                                         |         |
-| query          | Object   | JSON object to append to the url as query params.                                                               |         |
-| params         | Object   | JSON object to append to the url as query params.                                                               |         |
+| query          | Object   | JSON object to append to the url as search params.                                                              |         |
+| params         | Object   | JSON object to append to the url as search params.                                                              |         |
 | data           | Object   | JSON object to send in the request body.                                                                        |         |
 | parser         | String   | Method used to parse the response.                                                                              | "json"  |
 | onStart        | Function | Callback function to call when the request starts.                                                              |         |

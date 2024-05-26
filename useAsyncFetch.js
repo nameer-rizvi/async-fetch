@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import useCache from "./useCache.js";
 import useInterval from "./useInterval.js";
 
 function useAsyncFetch(stringUrl, props = {}) {
@@ -9,7 +8,6 @@ function useAsyncFetch(stringUrl, props = {}) {
     initialError,
     deps = [],
     poll,
-    cachetime = 60000, // 1 minute.
     timeout = 30000, // 30 seconds.
     ignoreCleanup,
     ignoreRequest,
@@ -36,19 +34,13 @@ function useAsyncFetch(stringUrl, props = {}) {
 
   const [unmounted, setUnmounted] = useState(false);
 
-  const cache = useCache(cachetime);
-
   useEffect(() => {
     return cleanupRequest;
   }, []);
 
-  useEffect(() => {
-    sendRequest("USE_CACHE");
-  }, [stringUrl, ...deps]);
+  useEffect(sendRequest, [stringUrl, ...deps]);
 
-  useInterval(() => {
-    sendRequest();
-  }, poll);
+  useInterval(sendRequest, poll);
 
   function cancelRequest() {
     if (cancelSource?.abort) cancelSource.abort();
@@ -61,7 +53,7 @@ function useAsyncFetch(stringUrl, props = {}) {
     }
   }
 
-  async function sendRequest(constant) {
+  async function sendRequest() {
     if (!stringUrl) {
       throw new Error("URL is required.");
     }
@@ -96,56 +88,61 @@ function useAsyncFetch(stringUrl, props = {}) {
 
         if (!unmounted) {
           if (pending) setPending2(true);
+
           if (!pending) setPending(true);
+
           setError();
+
           cancelRequest();
+
           setCancelSource(controller);
+
           if (onStart) onStart();
         }
 
-        const cachedResponse = constant === "USE_CACHE" && cache.get(url.href);
+        const response = await fetch(url, fetchProps);
 
-        let parsedResponse = cachedResponse;
-
-        if (!parsedResponse) {
-          const response = await fetch(url, fetchProps);
-
-          if (!response.ok) {
-            throw new Error(
-              JSON.stringify({
-                code: response.status,
-                text: response.statusText,
-                response: await response.text(),
-              }),
-            );
-          }
-
-          parsedResponse = await response[parser]();
+        if (!response.ok) {
+          throw new Error(
+            JSON.stringify({
+              code: response.status,
+              text: response.statusText,
+              response: await response.text(),
+            }),
+          );
         }
+
+        const parsedResponse = await response[parser]();
 
         if (!unmounted) {
           setData(parsedResponse);
+
           if (onSuccess) onSuccess(parsedResponse);
-          if (!cachedResponse) cache.set(url, parsedResponse);
         }
       } catch (e) {
         if (!unmounted && e.name !== "AbortError") {
           let error;
+
           try {
-            error = e.toString().replace("Error:", "");
-            error = JSON.parse(error.trim());
+            error = JSON.parse(e.toString().replace("Error:", "").trim());
           } catch {
             error = { response: e.toString(), text: e.toString() };
           }
+
           setError(error);
+
           if (onFail) onFail(error);
         }
       } finally {
         clearTimeout(requestTimeout);
+
         if (!unmounted) {
           if (pending) {
             setPending2();
-          } else setPending();
+          } else {
+            setPending();
+          }
+
           if (onFinish) onFinish();
         }
       }

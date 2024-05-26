@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useRef, useEffect } from "react";
 
 function useInterval(callback, poll) {
   const callbackRef = useRef(() => {}); // noop
@@ -8,8 +8,10 @@ function useInterval(callback, poll) {
   });
 
   useEffect(() => {
-    if (typeof poll !== "number") return;
+    if (typeof poll !== "number" || poll < 1000) return;
+
     const interval = setInterval(() => callbackRef.current(), poll);
+
     return () => {
       clearInterval(interval);
     };
