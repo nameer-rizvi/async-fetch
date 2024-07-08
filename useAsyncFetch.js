@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback, useEffect } from "react";
 import useInterval from "./useInterval.js";
 
 function useAsyncFetch(stringUrl, props = {}) {
@@ -9,11 +9,11 @@ function useAsyncFetch(stringUrl, props = {}) {
     deps = [],
     poll,
     timeout = 30000, // 30 seconds.
-    ignoreCleanup,
     ignoreRequest,
+    ignoreCleanup,
     query,
     params,
-    data: data2,
+    data: body,
     parser = "json",
     onStart,
     onSuccess,
@@ -24,7 +24,7 @@ function useAsyncFetch(stringUrl, props = {}) {
 
   const [pending, setPending] = useState(initialPending);
 
-  const [pending2, setPending2] = useState();
+  const [pending2, setPending2] = useState(initialPending);
 
   const [data, setData] = useState(initialData);
 
@@ -32,126 +32,111 @@ function useAsyncFetch(stringUrl, props = {}) {
 
   const [cancelSource, setCancelSource] = useState();
 
-  const [unmounted, setUnmounted] = useState(false);
+  const cancelRequest = useCallback(() => {
+    if (cancelSource?.abort) cancelSource.abort();
+  }, [cancelSource]);
 
-  useEffect(() => {
-    return cleanupRequest;
-  }, []);
+  const sendRequest = useCallback(async () => {
+    if (ignoreRequest === true) return;
+
+    const url = new URL(stringUrl, window.location.origin);
+
+    if (query || params) url.search = new URLSearchParams(query || params);
+
+    const contentType =
+      fetchProps.headers?.["Content-Type"] ||
+      fetchProps.headers?.["content-type"];
+
+    if (contentType === "application/x-www-form-urlencoded") {
+      fetchProps.body = new URLSearchParams(body || {});
+    } else if (body) {
+      fetchProps.body = JSON.stringify(body);
+    }
+
+    const controller = new AbortController();
+
+    const requestTimeout = setTimeout(() => controller.abort(), timeout);
+
+    fetchProps.signal = controller.signal;
+
+    if (pending) setPending2(true);
+
+    if (!pending) setPending(true);
+
+    setError();
+
+    cancelRequest();
+
+    setCancelSource(controller);
+
+    if (onStart) onStart();
+
+    try {
+      const response = await fetch(url, fetchProps);
+
+      if (!response.ok) {
+        throw new Error(
+          JSON.stringify({
+            code: response.status,
+            text: response.statusText,
+            response: await response.text(),
+          }),
+        );
+      } else {
+        const parsedResponse = await response[parser]();
+
+        setData(parsedResponse);
+
+        if (onSuccess) onSuccess(parsedResponse);
+      }
+    } catch (e) {
+      if (e.name !== "AbortError") {
+        let error;
+        try {
+          error = JSON.parse(e.toString().replace("Error:", "").trim());
+        } catch {
+          error = { response: e.toString(), text: e.toString() };
+        }
+        setError(error);
+        if (onFail) onFail(error);
+      }
+    } finally {
+      clearTimeout(requestTimeout);
+      if (pending) {
+        setPending2();
+      } else {
+        setPending();
+      }
+      if (onFinish) onFinish();
+    }
+  }, [
+    ignoreRequest,
+    stringUrl,
+    query,
+    params,
+    fetchProps,
+    body,
+    timeout,
+    parser,
+    onStart,
+    onSuccess,
+    onFail,
+    onFinish,
+  ]);
 
   useEffect(() => {
     sendRequest();
-  }, [stringUrl, ...deps]);
+  }, deps);
 
   useInterval(() => {
     sendRequest();
   }, poll);
 
-  function cancelRequest() {
-    if (cancelSource?.abort) cancelSource.abort();
-  }
-
-  function cleanupRequest() {
-    if (ignoreCleanup !== true) {
-      setUnmounted(true);
-      cancelRequest();
-    }
-  }
-
-  async function sendRequest() {
-    if (!stringUrl) {
-      throw new Error("URL is required.");
-    }
-
-    if (typeof stringUrl !== "string") {
-      throw new Error("URL must be of type string.");
-    }
-
-    const url = new URL(stringUrl, window.location.origin);
-
-    if (ignoreRequest !== true) {
-      const controller = new AbortController();
-
-      fetchProps.signal = controller.signal;
-
-      const requestTimeout = setTimeout(() => {
-        controller.abort();
-      }, timeout);
-
-      try {
-        if (query || params) url.search = new URLSearchParams(query || params);
-
-        const contentType =
-          fetchProps.headers?.["Content-Type"] ||
-          fetchProps.headers?.["content-type"];
-
-        if (contentType === "application/x-www-form-urlencoded") {
-          fetchProps.body = new URLSearchParams(data2 || {});
-        } else if (data2) {
-          fetchProps.body = JSON.stringify(data2);
-        }
-
-        if (!unmounted) {
-          if (pending) setPending2(true);
-
-          if (!pending) setPending(true);
-
-          setError();
-
-          cancelRequest();
-
-          setCancelSource(controller);
-
-          if (onStart) onStart();
-        }
-
-        const response = await fetch(url, fetchProps);
-
-        if (!response.ok) {
-          throw new Error(
-            JSON.stringify({
-              code: response.status,
-              text: response.statusText,
-              response: await response.text(),
-            }),
-          );
-        }
-
-        const parsedResponse = await response[parser]();
-
-        if (!unmounted) {
-          setData(parsedResponse);
-
-          if (onSuccess) onSuccess(parsedResponse);
-        }
-      } catch (e) {
-        if (!unmounted && e.name !== "AbortError") {
-          let error;
-
-          try {
-            error = JSON.parse(e.toString().replace("Error:", "").trim());
-          } catch {
-            error = { response: e.toString(), text: e.toString() };
-          }
-
-          setError(error);
-
-          if (onFail) onFail(error);
-        }
-      } finally {
-        clearTimeout(requestTimeout);
-
-        if (!unmounted) {
-          if (pending) {
-            setPending2();
-          } else {
-            setPending();
-          }
-
-          if (onFinish) onFinish();
-        }
-      }
-    }
-  }
+  useEffect(() => {
+    return () => {
+      if (ignoreCleanup !== true) cancelRequest();
+    };
+  }, []);
 
   return {
     pending: pending || pending2,

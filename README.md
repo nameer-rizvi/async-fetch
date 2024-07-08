@@ -4,8 +4,8 @@ Use async fetch hook for requests within React components.
 
 ## Installation
 
-```
-$ npm i async-fetch
+```console
+npm i async-fetch
 ```
 
 ## Usage

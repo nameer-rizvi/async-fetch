@@ -4,17 +4,15 @@ function useInterval(callback, poll) {
   const callbackRef = useRef(() => {}); // noop
 
   useEffect(() => {
-    callbackRef.current = callback;
-  });
+    if (typeof callback === "function") callbackRef.current = callback;
+  }, [callback]);
 
   useEffect(() => {
-    if (typeof poll !== "number" || poll < 1000) return;
+    if (typeof poll !== "number" || poll < 100) return;
 
     const interval = setInterval(() => callbackRef.current(), poll);
 
-    return () => {
-      clearInterval(interval);
-    };
+    return () => clearInterval(interval);
   }, [poll]);
 }
 

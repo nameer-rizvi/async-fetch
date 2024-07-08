@@ -1,6 +1,6 @@
 {
   "name": "async-fetch",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "Use async fetch hook for requests within React components.",
   "main": "useAsyncFetch.js",
   "type": "module",
