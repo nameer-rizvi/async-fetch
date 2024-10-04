@@ -1,7 +1,40 @@
 import { useState, useCallback, useEffect } from "react";
 import useInterval from "./useInterval.js";
 
-function useAsyncFetch(stringUrl, props = {}) {
+interface RequestProps {
+  initialPending?: boolean;
+  initialData?: any;
+  initialError?: any;
+  deps?: string[];
+  poll?: number;
+  timeout?: number;
+  ignoreRequest?: boolean;
+  ignoreCleanup?: boolean;
+  query?: any;
+  params?: any;
+  data?: any;
+  parser?: "json" | "text" | "blob" | "formData" | "arrayBuffer";
+  onStart?: () => void;
+  onSuccess?: (data: any) => void;
+  onFail?: (error: any) => void;
+  onFinish?: () => void;
+  headers?: Record<string, string>;
+  body?: any;
+  signal?: AbortSignal;
+}
+
+interface ResponseProps {
+  pending?: boolean;
+  data?: any;
+  error?: any;
+  sendRequest: () => void;
+  cancelRequest: () => void;
+}
+
+function useAsyncFetch(
+  stringUrl: string,
+  props: RequestProps = {},
+): ResponseProps {
   const {
     initialPending,
     initialData,
@@ -22,16 +55,17 @@ function useAsyncFetch(stringUrl, props = {}) {
     ...fetchProps
   } = props;
 
-  const [pending, setPending] = useState(initialPending);
+  const [pending, setPending] = useState<boolean | undefined>(initialPending);
 
-  const [pending2, setPending2] = useState(initialPending);
+  const [pending2, setPending2] = useState<boolean | undefined>(initialPending);
 
-  const [data, setData] = useState(initialData);
+  const [data, setData] = useState<any>(initialData);
 
-  const [error, setError] = useState(initialError);
+  const [error, setError] = useState<any>(initialError);
 
-  const [cancelSource, setCancelSource] = useState();
-
+  const [cancelSource, setCancelSource] = useState<
+    AbortController | undefined
+  >();
   const cancelRequest = useCallback(() => {
     if (cancelSource?.abort) cancelSource.abort();
   }, [cancelSource]);
@@ -41,7 +75,9 @@ function useAsyncFetch(stringUrl, props = {}) {
 
     const url = new URL(stringUrl, window.location.origin);
 
-    if (query || params) url.search = new URLSearchParams(query || params);
+    if (query || params) {
+      url.search = new URLSearchParams(query || params || {}).toString();
+    }
 
     const contentType =
       fetchProps.headers?.["Content-Type"] ||
@@ -63,7 +99,7 @@ function useAsyncFetch(stringUrl, props = {}) {
 
     if (!pending) setPending(true);
 
-    setError();
+    setError(undefined);
 
     cancelRequest();
 
@@ -89,24 +125,29 @@ function useAsyncFetch(stringUrl, props = {}) {
 
         if (onSuccess) onSuccess(parsedResponse);
       }
-    } catch (e) {
+    } catch (e: any) {
       if (e.name !== "AbortError") {
         let error;
+
         try {
           error = JSON.parse(e.toString().replace("Error:", "").trim());
         } catch {
           error = { response: e.toString(), text: e.toString() };
         }
+
         setError(error);
+
         if (onFail) onFail(error);
       }
     } finally {
       clearTimeout(requestTimeout);
+
       if (pending) {
-        setPending2();
+        setPending2(undefined);
       } else {
-        setPending();
+        setPending(undefined);
       }
+
       if (onFinish) onFinish();
     }
   }, [

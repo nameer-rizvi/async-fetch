@@ -1,10 +1,12 @@
 import { useRef, useEffect } from "react";
 
-function useInterval(callback, poll) {
-  const callbackRef = useRef(() => {}); // noop
+function useInterval(callback: () => void, poll?: number): void {
+  const callbackRef = useRef<() => void>(() => {}); // noop
 
   useEffect(() => {
-    if (typeof callback === "function") callbackRef.current = callback;
+    if (typeof callback === "function") {
+      callbackRef.current = callback;
+    }
   }, [callback]);
 
   useEffect(() => {
